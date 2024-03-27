@@ -4,6 +4,13 @@ API to interact with the [Equalify Platform](https://github.com/EqualifyEverythi
 ## Authentication
 You must have a valid authentication token to use the API.
 
+Here is an example request with a token:
+
+```
+curl -X GET 'https://api.equalify.com/get/scan_results' \
+-H 'Authorization: Bearer YOUR_API_TOKEN_HERE'
+```
+
 ## Get Scan Results
 The `/get/scan_results` endpoint returns scan results.
 
@@ -28,16 +35,16 @@ Filters are passed via the JSON body in a POST request, like this:
     "nodeIds": [5],
     "messageIds": [6],
     "tagIds": [7,8],
-    "nodeUpdatePeriod": [
+    "nodeUpdatePeriod": {
         "startDate": 2023-11-11,
         "endDate": 2024-11-11,
-    ]
+    }
 }
 ```
 That example would only show results related to tag id 7 AND 8 AND message id 6 AND node id 5 AND URL id 4 AND 1 AND property id 2 AND 3 AND node updates from November 11, 2023 - November 11, 2024.
 
 **Please Note:**
-- `nodeUpdatePeriod` must an array with `startDate` and `endDate`. Dates must be formatted `yyyy-mm-dd`.
+- `nodeUpdatePeriod` is an object with `startDate` and `endDate`. Dates must be formatted `yyyy-mm-dd`.
 
 ## Get Queued Scans
 Use `/get/queued_scans` to get a list of all the queued scans.
@@ -104,10 +111,10 @@ Reports are added via `/add/reports`. That endpoint requires the following body:
     "nodeIds": [5],
     "messageIds": [6],
     "tagIds": [7,8],
-    "nodeUpdatePeriod": [
+    "nodeUpdatePeriod": {
         "startDate": 2023-11-11,
         "endDate": 2024-11-11,
-    ]
+    }
 }
 ```
 
