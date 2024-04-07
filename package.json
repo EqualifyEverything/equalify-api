@@ -1,0 +1,24 @@
+{
+  "name": "equalify-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:EqualifyEverything/equalify-api.git",
+  "author": "Christopher Aitken <chris@heythisischris.com>",
+  "license": "AGPL-3.0-only",
+  "imports": {
+    "#src/*": "./*"
+  },
+  "scripts": {
+    "build:prod": "esbuild ./*.ts --bundle --platform=node --outdir=dist --external:@aws-sdk && cd dist && zip -r lambda.zip * > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf lambda.zip",
+    "build:staging": "esbuild ./*.ts --bundle --platform=node --outdir=dist --external:@aws-sdk && cd dist && zip -r lambda.zip * > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api-staging --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf lambda.zip",
+    "build": "yarn build:staging && yarn build:prod"
+  },
+  "type": "module",
+  "dependencies": {},
+  "devDependencies": {
+    "@fastify/aws-lambda": "^4.0.0",
+    "@types/node": "^20.11.27",
+    "esbuild": "^0.20.1",
+    "fastify": "^4.26.2"
+  }
+}
