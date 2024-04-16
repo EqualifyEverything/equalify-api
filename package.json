@@ -9,16 +9,19 @@
     "#src/*": "./*"
   },
   "scripts": {
+    "start:prod": "esbuild --format=esm ./*.ts --platform=node --outdir=dist && node --env-file=.env.production ./dist/app.js",
+    "start:staging": "esbuild --format=esm ./*.ts --platform=node --outdir=dist && node --env-file=.env.staging ./dist/app.js",
     "build:prod": "esbuild ./*.ts --bundle --platform=node --outdir=dist --external:@aws-sdk && cd dist && zip -r lambda.zip * > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf lambda.zip",
-    "build:staging": "esbuild ./*.ts --bundle --platform=node --outdir=dist --external:@aws-sdk && cd dist && zip -r lambda.zip * > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api-staging --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf lambda.zip",
-    "build": "yarn build:staging && yarn build:prod"
+    "build:staging": "esbuild ./*.ts --bundle --platform=node --outdir=dist --external:@aws-sdk && cd dist && zip -r lambda.zip * > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api-staging --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf lambda.zip"
   },
   "type": "module",
   "dependencies": {},
   "devDependencies": {
     "@fastify/aws-lambda": "^4.0.0",
-    "@types/node": "^20.11.27",
+    "@fastify/postgres": "^5.2.2",
+    "@types/node": "^20.12.7",
     "esbuild": "^0.20.1",
-    "fastify": "^4.26.2"
+    "fastify": "^4.26.2",
+    "pg": "^8.11.5"
   }
 }
