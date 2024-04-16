@@ -4,11 +4,6 @@
     "target": "ES2022",
     "moduleResolution": "node",
     "outDir": "./dist",
-    "baseUrl": ".",
-    "paths": {
-      "#src/*": [
-        "./*"
-      ]
-    }
+    "baseUrl": "./src"
   }
 }

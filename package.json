@@ -5,14 +5,11 @@
   "repository": "git@github.com:EqualifyEverything/equalify-api.git",
   "author": "Christopher Aitken <chris@heythisischris.com>",
   "license": "AGPL-3.0-only",
-  "imports": {
-    "#src/*": "./*"
-  },
   "scripts": {
-    "start:prod": "esbuild --format=esm ./*.ts --platform=node --outdir=dist && node --env-file=.env.production ./dist/app.js",
-    "start:staging": "esbuild --format=esm ./*.ts --platform=node --outdir=dist && node --env-file=.env.staging ./dist/app.js",
-    "build:prod": "esbuild ./*.ts --bundle --platform=node --outdir=dist --external:@aws-sdk && cd dist && zip -r lambda.zip * > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf lambda.zip",
-    "build:staging": "esbuild ./*.ts --bundle --platform=node --outdir=dist --external:@aws-sdk && cd dist && zip -r lambda.zip * > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api-staging --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf lambda.zip"
+    "start:prod": "esbuild --format=esm src/**/*.ts --outdir=dist && node --env-file=.env.production dist/app.js",
+    "start:staging": "esbuild --format=esm src/**/*.ts --platform=node --outdir=dist && node --env-file=.env.staging dist/app.js",
+    "build:prod": "esbuild src/*.ts --bundle --platform=node --outdir=dist --external:@aws-sdk && cd dist && zip -r lambda.zip * > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf lambda.zip",
+    "build:staging": "esbuild src/*.ts --bundle --platform=node --outdir=dist --external:@aws-sdk && cd dist && zip -r lambda.zip * > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api-staging --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf lambda.zip"
   },
   "type": "module",
   "dependencies": {},
