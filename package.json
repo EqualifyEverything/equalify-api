@@ -19,6 +19,11 @@
     "@types/node": "^20.12.7",
     "esbuild": "^0.20.1",
     "fastify": "^4.26.2",
-    "pg": "^8.11.5"
+    "graphql": "^16.8.1",
+    "pg": "^8.11.5",
+    "postgraphile": "^4.13.0"
+  },
+  "resolutions": {
+    "graphql": "16.x"
   }
 }
