@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import { getResults, graphql } from './routes/index.js';
+import { getReports, getResults, graphql } from './routes/index.js';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 export const fastify = Fastify({ logger: true });
 const cognitoJwtVerifier = CognitoJwtVerifier.create({
@@ -21,6 +21,7 @@ fastify.addHook('preHandler', async (request, reply) => {
 
 fastify.post('/graphql', {}, async (request, reply) => graphql({ request, reply }));
 fastify.get('/get/results', {}, async (request, reply) => getResults({ request, reply }));
+fastify.get('/get/reports', {}, async (request, reply) => getReports({ request, reply }));
 
 fastify.listen({ port: 3000 }, (err) => {
     console.log(`Server listening on ${fastify.server.address().port}`)

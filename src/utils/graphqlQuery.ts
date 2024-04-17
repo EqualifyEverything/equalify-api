@@ -1,9 +1,11 @@
 import { graphql as gql } from 'graphql';
 import { withPostGraphileContext, createPostGraphileSchema } from 'postgraphile';
+import PgSimplifyInflectorPlugin from '@graphile-contrib/pg-simplify-inflector';
+import ConnectionFilterPlugin from 'postgraphile-plugin-connection-filter';
 import pg from 'pg';
 import { jwtClaims } from '../app.js';
 const pool = new pg.Pool({ connectionString: process.env.DB_CONNECTION_URL });
-const cache = createPostGraphileSchema(pool, 'public');
+const cache = createPostGraphileSchema(pool, 'public', { appendPlugins: [PgSimplifyInflectorPlugin, ConnectionFilterPlugin] });
 
 export const graphqlQuery = async ({ query, variables = null }) => {
     try {
