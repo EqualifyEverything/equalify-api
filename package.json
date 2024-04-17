@@ -15,14 +15,14 @@
   "dependencies": {},
   "devDependencies": {
     "@fastify/aws-lambda": "^4.0.0",
-    "@fastify/postgres": "^5.2.2",
     "@types/node": "^20.12.7",
     "aws-jwt-verify": "^4.0.1",
     "esbuild": "^0.20.1",
     "fastify": "^4.26.2",
     "graphql": "^16.8.1",
     "pg": "^8.11.5",
-    "postgraphile": "^4.13.0"
+    "postgraphile": "^4.13.0",
+    "serverless-postgres": "^2.1.0"
   },
   "resolutions": {
     "graphql": "16.x"

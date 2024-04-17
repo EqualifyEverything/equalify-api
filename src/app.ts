@@ -1,9 +1,8 @@
 import Fastify from 'fastify';
-import fastifyPg from '@fastify/postgres';
 import { getResults, graphql } from './routes/index.js';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 export const fastify = Fastify({ logger: true });
-export const cognitoJwtVerifier = CognitoJwtVerifier.create({
+const cognitoJwtVerifier = CognitoJwtVerifier.create({
     userPoolId: process.env.USER_POOL_ID,
     clientId: process.env.WEB_CLIENT_ID,
     tokenUse: 'access',
@@ -20,7 +19,6 @@ fastify.addHook('preHandler', async (request, reply) => {
     }
 })
 
-fastify.register(fastifyPg, { connectionString: process.env.DB_CONNECTION_URL });
 fastify.post('/graphql', {}, async (request, reply) => graphql({ request, reply }));
 fastify.get('/get/results', {}, async (request, reply) => getResults({ request, reply }));
 
