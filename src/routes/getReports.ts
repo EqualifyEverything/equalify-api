@@ -13,8 +13,8 @@ export const getReports = async ({ request, reply }) => {
             }
         }`,
         variables: {
-            first: parseInt(request.query.first),
-            offset: parseInt(request.query.offset),
+            first: parseInt(request.query.first ?? 100),
+            offset: parseInt(request.query.offset ?? 0),
         },
     }))?.data;
 
