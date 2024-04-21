@@ -6,8 +6,8 @@
   "author": "Christopher Aitken <chris@heythisischris.com>",
   "license": "AGPL-3.0-only",
   "scripts": {
-    "start:prod": "esbuild --format=esm src/**/*.ts --outdir=dist && node --env-file=.env.production dist/app.js",
-    "start:staging": "esbuild --format=esm src/**/*.ts --platform=node --outdir=dist && node --env-file=.env.staging dist/app.js",
+    "start:prod": "esbuild --format=esm src/**/*.ts --outdir=dist && nodemon --env-file=.env.production dist/app.js",
+    "start:staging": "esbuild --format=esm src/**/*.ts --outdir=dist && nodemon --env-file=.env.staging dist/app.js",
     "build:prod": "esbuild src/*.ts --bundle --platform=node --outdir=dist --external:@aws-sdk && cd dist && zip -r lambda.zip * > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf lambda.zip",
     "build:staging": "esbuild src/*.ts --bundle --platform=node --outdir=dist --external:@aws-sdk && cd dist && zip -r lambda.zip * > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api-staging --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf lambda.zip"
   },
@@ -21,14 +21,25 @@
     "esbuild": "^0.20.1",
     "fastify": "^4.26.2",
     "graphql": "^16.8.1",
+    "nodemon": "^3.1.0",
     "openai": "^4.36.0",
     "pg": "^8.11.5",
     "postgraphile": "^4.13.0",
     "postgraphile-plugin-connection-filter": "^2.3.0",
     "serverless-postgres": "^2.1.0",
-    "string-strip-html": "^13.4.8"
+    "string-strip-html": "^13.4.8",
+    "uuid": "^9.0.1"
   },
   "resolutions": {
     "graphql": "16.x"
+  },
+  "nodemonConfig": {
+    "ext": "ts,js,json",
+    "watch": [
+      "src/"
+    ],
+    "events": {
+      "restart": "esbuild --format=esm src/**/*.ts --outdir=dist"
+    }
   }
 }
