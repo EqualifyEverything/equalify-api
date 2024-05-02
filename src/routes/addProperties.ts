@@ -1,5 +1,5 @@
 import { jwtClaims } from '../app.js';
-import { pgClient } from '../utils/index.js';
+import { formatId, pgClient, validateDiscovery, validateDiscoveryOptions, validateUrl } from '../utils/index.js';
 
 export const addProperties = async ({ request, reply }) => {
     if (!request.body.propertyName) {
@@ -20,6 +20,18 @@ export const addProperties = async ({ request, reply }) => {
             message: 'Property Discovery settings are required.',
         }
     }
+    else if (!validateUrl(request.body.propertyUrl)) {
+        return {
+            status: 'error',
+            message: 'Property URL is not valid.',
+        }
+    }
+    else if (!validateDiscovery(request.body.propertyDiscovery)) {
+        return {
+            status: 'error',
+            message: `Property Discovery is not valid- must be one of: ${validateDiscoveryOptions.join(', ')}`,
+        }
+    }
 
     await pgClient.connect();
     const id = (await pgClient.query(`
@@ -30,6 +42,6 @@ export const addProperties = async ({ request, reply }) => {
     return {
         status: 'success',
         message: 'Property added successfully',
-        result: id,
+        result: formatId(id),
     };
 }

@@ -5,13 +5,13 @@ export const deleteReports = async ({ request, reply }) => {
     if (!request.query.reportId) {
         return {
             status: 'error',
-            message: 'Property ID is required.',
+            message: 'Report ID is required.',
         }
     }
     else if (!validateUuid(request.query.reportId)) {
         return {
             status: 'error',
-            message: 'Property ID is not a valid UUID.',
+            message: 'Report ID is not a valid UUID.',
         }
     }
 
@@ -30,7 +30,7 @@ export const deleteReports = async ({ request, reply }) => {
     else {
         return {
             status: 'success',
-            message: 'Property deletion successful',
+            message: 'Report deletion successful',
             result: deletedIds,
         };
     }

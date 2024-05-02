@@ -1,5 +1,5 @@
 import { jwtClaims } from '../app.js';
-import { pgClient, validateUuid } from '../utils/index.js';
+import { pgClient, validateDiscovery, validateDiscoveryOptions, validateUrl, validateUuid } from '../utils/index.js';
 
 export const updateProperties = async ({ request, reply }) => {
     if (!validateUuid(request.body.propertyId)) {
@@ -14,12 +14,23 @@ export const updateProperties = async ({ request, reply }) => {
             message: 'At least propertyName, propertyUrl, and/or propertyDiscovery are required.',
         }
     }
+    else if (request.body.propertyUrl && !validateUrl(request.body.propertyUrl)) {
+        return {
+            status: 'error',
+            message: 'PropertyUrl is not valid.',
+        }
+    }
+    else if (request.body.propertyDiscovery && !validateDiscovery(request.body.propertyDiscovery)) {
+        return {
+            status: 'error',
+            message: `propertyDiscovery is not valid- must be one of these values: ${validateDiscoveryOptions.join(', ')}`,
+        }
+    }
 
     await pgClient.connect();
     const original = (await pgClient.query(`
         SELECT * FROM "properties" WHERE "id"=$1 AND "user_id"=$2
     `, [request.body.propertyId, jwtClaims.sub]))?.rows?.[0];
-    console.log(original);
     await pgClient.query(`
         UPDATE "properties" SET "name"=$1, "url"=$2, "discovery"=$3, "archived"=$4, "processed"=$5 WHERE "id"=$6 AND "user_id"=$7
     `, [request.body.propertyName ?? original.name, request.body.propertyUrl ?? original.url, request.body.propertyDiscovery ?? original.discovery, request.body.propertyArchived ?? original.archived, request.body.propertyProcessed ?? original.processed, request.body.propertyId, jwtClaims.sub]);
