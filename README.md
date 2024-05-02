@@ -12,11 +12,12 @@ Our API is stateless and is intended to run ephemerally on serverless environmen
 
 ## Important Links
 
+[Postman Collection](https://documenter.getpostman.com/view/26880150/2sA3BoarvB)  
+[GitBook Documentation](https://docs.equalify.dev/)
+
 Production environment: https://api.equalify.dev  
 Staging environment: https://api-staging.equalify.dev  
 Local environment: http://localhost:3000
-
-Postman collection: https://documenter.getpostman.com/view/26880150/2sA3BoarvB
 
 ## Setup
 

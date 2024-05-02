@@ -4,9 +4,9 @@ export const getReports = async ({ request, reply }) => {
     const response = (await graphqlQuery({
         query: `query($first: Int, $offset: Int){
             reports(first: $first, offset: $offset, ${(request.query.reportIds) ? `filter: { id: {in: [
-                        ${request.query.reportIds.split(',').map(obj => `"${obj}"`).join()}
-                    ]}}` : ''}
-                ) { 
+                    ${request.query.reportIds.split(',').map(obj => `"${obj}"`).join()}
+                ]}}` : ''}
+            ) { 
                 nodes {
                     id
                     name
