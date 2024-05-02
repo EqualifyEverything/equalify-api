@@ -1,8 +1,40 @@
-import { jwtClaims } from '../app.js';
-import { pgClient } from '../utils/index.js';
+import { graphqlQuery } from '../utils/index.js';
 
 export const getProperties = async ({ request, reply }) => {
-    await pgClient.connect();
-    await pgClient.clean();
-    return;
+    const response = (await graphqlQuery({
+        query: `query($first: Int, $offset: Int){
+            properties(first: $first, offset: $offset, 
+                ${(request.query.propertyIds || request.query.propertyDiscovery || request.query.propertyUrls) ? `
+                    filter: {
+                        ${request.query.propertyIds ? `id: {in: [
+                            ${request.query.propertyIds.split(',').map(obj => `"${obj}"`).join()}
+                        ]},` : ''}
+                        ${request.query.propertyDiscovery ? `propertyDiscovery: {eq: "${request.query.propertyDiscovery}"},` : ''}
+                        ${request.query.propertyUrls ? `url: {in: ${request.query.propertyUrls.split(',').map(obj => `"${obj}"`)}},` : ''}
+                    }` : ''}
+            ) { 
+                nodes {
+                    id
+                    name
+                    url
+                    archived
+                    discovery
+                    processed
+                }
+                totalCount
+            }
+        }`,
+        variables: {
+            first: parseInt(request.query.first ?? 100),
+            offset: parseInt(request.query.offset ?? 0),
+        },
+    }))?.data;
+
+    return {
+        status: 'success',
+        result: response?.properties?.nodes?.map(obj => ({
+            ...obj,
+        })),
+        total: response?.properties?.totalCount,
+    };
 }
