@@ -8,16 +8,16 @@ export const updateProperties = async ({ request, reply }) => {
             message: 'Property ID is not a valid UUID.',
         }
     }
-    else if (!(request.body.propertyName || request.body.propertyUrl || request.body.propertyDiscovery)) {
+    else if (!(request.body.propertyName || request.body.sitemapUrl || request.body.propertyDiscovery)) {
         return {
             status: 'error',
-            message: 'At least propertyName, propertyUrl, and/or propertyDiscovery are required.',
+            message: 'At least propertyName, sitemapUrl, and/or propertyDiscovery are required.',
         }
     }
-    else if (request.body.propertyUrl && !validateUrl(request.body.propertyUrl)) {
+    else if (request.body.sitemapUrl && !validateUrl(request.body.sitemapUrl)) {
         return {
             status: 'error',
-            message: 'PropertyUrl is not valid.',
+            message: 'sitemapUrl is not valid.',
         }
     }
     else if (request.body.propertyDiscovery && !validateDiscovery(request.body.propertyDiscovery)) {
@@ -32,8 +32,8 @@ export const updateProperties = async ({ request, reply }) => {
         SELECT * FROM "properties" WHERE "id"=$1 AND "user_id"=$2
     `, [request.body.propertyId, jwtClaims.sub]))?.rows?.[0];
     await pgClient.query(`
-        UPDATE "properties" SET "name"=$1, "url"=$2, "discovery"=$3, "archived"=$4, "processed"=$5 WHERE "id"=$6 AND "user_id"=$7
-    `, [request.body.propertyName ?? original.name, request.body.propertyUrl ?? original.url, request.body.propertyDiscovery ?? original.discovery, request.body.propertyArchived ?? original.archived, request.body.propertyProcessed ?? original.processed, request.body.propertyId, jwtClaims.sub]);
+        UPDATE "properties" SET "name"=$1, "sitemapUrl"=$2, "discovery"=$3, "archived"=$4, "processed"=$5 WHERE "id"=$6 AND "user_id"=$7
+    `, [request.body.propertyName ?? original.name, request.body.sitemapUrl ?? original.sitemapUrl, request.body.propertyDiscovery ?? original.discovery, request.body.propertyArchived ?? original.archived, request.body.propertyProcessed ?? original.processed, request.body.propertyId, jwtClaims.sub]);
     await pgClient.clean();
 
     return {

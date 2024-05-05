@@ -8,10 +8,10 @@ export const addProperties = async ({ request, reply }) => {
             message: 'Property Name is required.',
         }
     }
-    else if (!request.body.propertyUrl) {
+    else if (!request.body.sitemapUrl) {
         return {
             status: 'error',
-            message: 'Property URL is required.',
+            message: 'Sitemap URL is required.',
         }
     }
     else if (!request.body.propertyDiscovery) {
@@ -20,10 +20,10 @@ export const addProperties = async ({ request, reply }) => {
             message: 'Property Discovery settings are required.',
         }
     }
-    else if (!validateUrl(request.body.propertyUrl)) {
+    else if (!validateUrl(request.body.sitemapUrl)) {
         return {
             status: 'error',
-            message: 'Property URL is not valid.',
+            message: 'Sitemap URL is not valid.',
         }
     }
     else if (!validateDiscovery(request.body.propertyDiscovery)) {
@@ -35,8 +35,8 @@ export const addProperties = async ({ request, reply }) => {
 
     await pgClient.connect();
     const id = (await pgClient.query(`
-        INSERT INTO "properties" ("user_id", "name", "url", "discovery") VALUES ($1, $2, $3, $4) RETURNING "id"
-    `, [jwtClaims.sub, request.body.propertyName, request.body.propertyUrl, request.body.discovery])).rows?.[0]?.id;
+        INSERT INTO "properties" ("user_id", "name", "sitemapUrl", "discovery") VALUES ($1, $2, $3, $4) RETURNING "id"
+    `, [jwtClaims.sub, request.body.propertyName, request.body.sitemapUrl, request.body.discovery])).rows?.[0]?.id;
     await pgClient.clean();
 
     return {

@@ -10,13 +10,14 @@ export const getProperties = async ({ request, reply }) => {
                             ${request.query.propertyIds.split(',').map(obj => `"${obj}"`).join()}
                         ]},` : ''}
                         ${request.query.propertyDiscovery ? `propertyDiscovery: {eq: "${request.query.propertyDiscovery}"},` : ''}
-                        ${request.query.propertyUrls ? `url: {in: ${request.query.propertyUrls.split(',').map(obj => `"${obj}"`)}},` : ''}
+                        ${request.query.propertyUrls ? `sitemapUrl: {in: ${request.query.propertyUrls.split(',').map(obj => `"${obj}"`)}},` : ''}
                     }` : ''}
             ) { 
                 nodes {
                     id
                     name
-                    url
+                    sitemapUrl
+                    lastProcessed
                     archived
                     discovery
                     processed
