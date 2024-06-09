@@ -16,7 +16,11 @@ export const getProperties = async ({ request, reply }) => {
                 nodes {
                     id
                     name
-                    sitemapUrl
+                    urls {
+                      nodes {
+                        url
+                      }
+                    }
                     lastProcessed
                     archived
                     discovery

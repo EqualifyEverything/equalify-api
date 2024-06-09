@@ -35,8 +35,9 @@ export const addProperties = async ({ request, reply }) => {
 
     await pgClient.connect();
     const id = (await pgClient.query(`
-        INSERT INTO "properties" ("user_id", "name", "sitemapUrl", "discovery") VALUES ($1, $2, $3, $4) RETURNING "id"
-    `, [jwtClaims.sub, request.body.propertyName, request.body.sitemapUrl, request.body.discovery])).rows?.[0]?.id;
+        INSERT INTO "properties" ("user_id", "name", "discovery") VALUES ($1, $2, $3) RETURNING "id"
+    `, [jwtClaims.sub, request.body.propertyName, request.body.discovery])).rows?.[0]?.id;
+    await pgClient.query(`INSERT INTO "urls" ("user_id", "property_id", "url") VALUES ($1, $2, $3)`, [jwtClaims.sub, id, request.body.sitemapUrl]);
     await pgClient.clean();
 
     return {
