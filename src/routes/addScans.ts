@@ -28,9 +28,16 @@ export const addScans = async ({ request, reply }) => {
                 }
             }
             else {
+                console.log(JSON.stringify({ url }));
+                const scanResponse = await (await fetch(`https://scan.equalify.app/generate/url`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                })).json();
+                console.log(JSON.stringify({ scanResponse }));
                 await pgClient.query(`
-                    INSERT INTO "scans" ("user_id", "property_id", "url_id") VALUES ($1, $2, $3) RETURNING "id"
-                `, [jwtClaims.sub, propertyId, id]);
+                    INSERT INTO "scans" ("user_id", "property_id", "url_id", "job_id") VALUES ($1, $2, $3, $4) RETURNING "id"
+                `, [jwtClaims.sub, propertyId, id, parseInt(scanResponse?.jobID)]);
             }
         }
     }
@@ -49,9 +56,10 @@ export const addScans = async ({ request, reply }) => {
             }
         }
         else {
+            const jobId = (await (await fetch(`https://scan.equalify.app/generate/url`, { method: 'POST', body: JSON.stringify({ url }) })).json())?.jobID;
             await pgClient.query(`
-                INSERT INTO "scans" ("user_id", "url_id") VALUES ($1, $2) RETURNING "id"
-            `, [jwtClaims.sub, urlId]);
+                INSERT INTO "scans" ("user_id", "url_id", "job_id") VALUES ($1, $2, $3) RETURNING "id"
+            `, [jwtClaims.sub, urlId, jobId]);
         }
     }
     await pgClient.clean();

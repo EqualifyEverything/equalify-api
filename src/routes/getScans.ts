@@ -9,6 +9,10 @@ export const getScans = async ({ request, reply }) => {
                 ) { 
                 nodes {
                     id
+                    createdAt
+                    processing
+                    jobId
+                    results
                 }
                 totalCount
             }
