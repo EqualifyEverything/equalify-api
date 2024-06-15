@@ -15,7 +15,7 @@
   "type": "module",
   "dependencies": {},
   "devDependencies": {
-    "@fastify/aws-lambda": "^4.0.0",
+    "@fastify/aws-lambda": "^4.1.0",
     "@graphile-contrib/pg-simplify-inflector": "^6.1.0",
     "@types/node": "^20.12.7",
     "aws-jwt-verify": "^4.0.1",
