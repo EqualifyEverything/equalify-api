@@ -1,4 +1,4 @@
-import { jwtClaims } from 'app.js';
+import { jwtClaims } from '../app.js';
 import { pgClient, validateUrl } from '../utils/index.js';
 
 export const addScans = async ({ request, reply }) => {

@@ -6,10 +6,10 @@
   "author": "Christopher Aitken <chris@heythisischris.com>",
   "license": "AGPL-3.0-only",
   "scripts": {
-    "start:prod": "esbuild --format=esm src/**/*.ts --outdir=dist && nodemon --env-file=.env.production dist/app.js",
-    "start:staging": "esbuild --format=esm src/**/*.ts --outdir=dist && nodemon --env-file=.env.staging dist/app.js",
-    "build:prod": "esbuild src/*.ts --bundle --platform=node --outdir=dist --external:@aws-sdk && cd dist && zip -r lambda.zip * > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf lambda.zip",
-    "build:staging": "esbuild src/*.ts --bundle --platform=node --outdir=dist --external:@aws-sdk && cd dist && zip -r lambda.zip * > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api-staging --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf lambda.zip",
+    "start:prod": "esbuild src/**/*.ts --outdir=dist/local && nodemon --env-file=.env.production dist/local/app.js",
+    "start:staging": "esbuild src/**/*.ts --outdir=dist/local && nodemon --env-file=.env.staging dist/local/app.js",
+    "build:prod": "esbuild src/index.ts --bundle --platform=node --outdir=dist/lambda --external:@aws-sdk && cd dist/lambda && zip -r lambda.zip index.js > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf lambda.zip",
+    "build:staging": "esbuild src/index.ts --bundle --platform=node --outdir=dist/lambda --external:@aws-sdk && cd dist/lambda && zip -r lambda.zip index.js > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api-staging --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf dist/lambda/lambda.zip",
     "build": "yarn build:staging && yarn build:prod"
   },
   "type": "module",
