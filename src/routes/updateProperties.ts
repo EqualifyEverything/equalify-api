@@ -1,5 +1,5 @@
-import { jwtClaims } from '../app.js';
-import { pgClient, validateDiscovery, validateDiscoveryOptions, validateUrl, validateUuid } from '../utils/index.js';
+import { jwtClaims } from '#src/app';
+import { pgClient, validateDiscovery, validateDiscoveryOptions, validateUrl, validateUuid } from '#src/utils';
 
 export const updateProperties = async ({ request, reply }) => {
     if (!validateUuid(request.body.propertyId)) {

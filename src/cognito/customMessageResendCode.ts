@@ -1,4 +1,4 @@
-import { formatEmail } from "../utils";
+import { formatEmail } from '#src/utils';
 
 export const customMessageResendCode = async (event) => {
     event.response.emailSubject = `Equalify Verification Code`;

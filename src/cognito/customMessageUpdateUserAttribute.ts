@@ -1,4 +1,4 @@
-import { formatEmail } from "../utils";
+import { formatEmail } from '#src/utils';
 
 export const customMessageUpdateUserAttribute = async (event) => {
     event.response.emailSubject = `Please confirm your new email address`;

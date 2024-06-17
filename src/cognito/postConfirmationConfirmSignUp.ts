@@ -1,4 +1,4 @@
-import { pgClient } from "../utils/index.js";
+import { pgClient } from '#src/utils';
 
 export const postConfirmationConfirmSignUp = async (event) => {
     const { sub, email, given_name, family_name } = event.request.userAttributes;

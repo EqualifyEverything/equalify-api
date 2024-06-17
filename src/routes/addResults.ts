@@ -1,5 +1,5 @@
-import { jwtClaims } from '../app.js';
-import { formatId, pgClient } from '../utils/index.js';
+import { jwtClaims } from '#src/app';
+import { formatId, pgClient } from '#src/utils';
 
 export const addResults = async ({ request, reply }) => {
     await pgClient.connect();

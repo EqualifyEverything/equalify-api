@@ -1,5 +1,5 @@
-import { jwtClaims } from '../app.js';
-import { pgClient, validateUrl } from '../utils/index.js';
+import { jwtClaims } from '#src/app';
+import { pgClient, validateUrl } from '#src/utils';
 
 export const addScans = async ({ request, reply }) => {
     if (!(request.body.propertyIds || request.body.urlIds)) {

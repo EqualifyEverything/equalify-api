@@ -1,4 +1,4 @@
-import { postConfirmationConfirmSignUp, postConfirmationConfirmForgotPassword, customMessageSignUp, customMessageResendCode, customMessageForgotPassword, customMessageVerifyUserAttribute, customMessageUpdateUserAttribute } from 'cognito/index.js';
+import { postConfirmationConfirmSignUp, postConfirmationConfirmForgotPassword, customMessageSignUp, customMessageResendCode, customMessageForgotPassword, customMessageVerifyUserAttribute, customMessageUpdateUserAttribute } from '#src/cognito/index';
 
 export const cognito = async (event) => {
     if (event.triggerSource === 'PostConfirmation_ConfirmSignUp') {

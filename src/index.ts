@@ -1,7 +1,7 @@
-import awsLambdaFastify from "@fastify/aws-lambda";
-import { fastify } from "./app.js";
-import { cognito } from './cognito.js';
-import { scheduled } from './scheduled.js';
+import awsLambdaFastify from '@fastify/aws-lambda';
+import { fastify } from '#src/app';
+import { cognito } from '#src/cognito';
+import { scheduled } from '#src/scheduled';
 const proxy = awsLambdaFastify(fastify);
 
 export async function handler(event: any, context: any) {

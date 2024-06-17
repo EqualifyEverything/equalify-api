@@ -1,5 +1,5 @@
-import { jwtClaims } from 'app';
-import { pgClient } from 'utils';
+import { jwtClaims } from '#src/app';
+import { pgClient } from '#src/utils';
 
 export const processScans = async () => {
     // This route is called once every minute by Amazon EventBridge Scheduler

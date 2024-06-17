@@ -1,5 +1,5 @@
-import { jwtClaims } from '../app.js';
-import { formatId, pgClient, validateDiscovery, validateDiscoveryOptions, validateUrl } from '../utils/index.js';
+import { jwtClaims } from '#src/app';
+import { formatId, pgClient, validateDiscovery, validateDiscoveryOptions, validateUrl } from '#src/utils';
 
 export const addProperties = async ({ request, reply }) => {
     if (!request.body.propertyName) {

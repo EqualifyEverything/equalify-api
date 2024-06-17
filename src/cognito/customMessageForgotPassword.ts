@@ -1,4 +1,4 @@
-import { formatEmail } from "../utils";
+import { formatEmail } from '#src/utils';
 
 export const customMessageForgotPassword = async (event) => {
     event.response.emailSubject = `Please reset your password`;

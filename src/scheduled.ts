@@ -1,4 +1,4 @@
-import { processScans, syncIpRanges } from './scheduled/index.js';
+import { processScans, syncIpRanges } from '#src/scheduled/index';
 
 export const scheduled = async (event) => {
     if (event.internalPath.endsWith('/processScans')) {

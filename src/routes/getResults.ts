@@ -1,4 +1,4 @@
-import { graphqlQuery } from '../utils/index.js';
+import { graphqlQuery } from '#src/utils';
 
 export const getResults = async ({ request, reply }) => {
     /*

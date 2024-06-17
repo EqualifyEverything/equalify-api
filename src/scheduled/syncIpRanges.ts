@@ -1,4 +1,4 @@
-import { EC2Client, DescribeSecurityGroupsCommand, RevokeSecurityGroupIngressCommand, AuthorizeSecurityGroupIngressCommand } from "@aws-sdk/client-ec2";
+import { EC2Client, DescribeSecurityGroupsCommand, RevokeSecurityGroupIngressCommand, AuthorizeSecurityGroupIngressCommand } from '@aws-sdk/client-ec2';
 const ec2Client = new EC2Client();
 
 export const syncIpRanges = async () => {

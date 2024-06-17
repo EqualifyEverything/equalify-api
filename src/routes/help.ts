@@ -1,5 +1,5 @@
 import { stripHtml } from 'string-strip-html';
-import { openai } from '../utils/index.js';
+import { openai } from '#src/utils';
 
 export const help = async ({ request, reply }) => {
     const { reportId, messageId, dequeURL, message: accessibilityIssueToFix, codeSnippet: originalCodeSnippet, sourceUrl, status } = request.body;

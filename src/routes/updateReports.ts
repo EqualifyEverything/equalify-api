@@ -1,5 +1,5 @@
-import { jwtClaims } from '../app.js';
-import { pgClient, validateUuid } from '../utils/index.js';
+import { jwtClaims } from '#src/app';
+import { pgClient, validateUuid } from '#src/utils';
 
 export const updateReports = async ({ request, reply }) => {
     if (!validateUuid(request.body.reportId)) {

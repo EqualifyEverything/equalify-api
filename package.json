@@ -12,6 +12,9 @@
     "build:staging": "esbuild src/index.ts --bundle --platform=node --outdir=dist/lambda --external:@aws-sdk && cd dist/lambda && zip -r lambda.zip index.js > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api-staging --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf dist/lambda/lambda.zip",
     "build": "yarn build:staging && yarn build:prod"
   },
+  "imports": {
+    "#src/*": "./src/*.ts"
+  },
   "type": "module",
   "dependencies": {},
   "devDependencies": {

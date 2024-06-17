@@ -3,7 +3,7 @@ import { withPostGraphileContext, createPostGraphileSchema } from 'postgraphile'
 import PgSimplifyInflectorPlugin from '@graphile-contrib/pg-simplify-inflector';
 import ConnectionFilterPlugin from 'postgraphile-plugin-connection-filter';
 import pg from 'pg';
-import { jwtClaims } from '../app.js';
+import { jwtClaims } from '#src/app';
 const pool = new pg.Pool({ connectionString: process.env.DB_CONNECTION_URL });
 const cache = createPostGraphileSchema(pool, 'public', {
     appendPlugins: [PgSimplifyInflectorPlugin, ConnectionFilterPlugin],
