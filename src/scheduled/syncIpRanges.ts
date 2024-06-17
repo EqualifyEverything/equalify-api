@@ -4,13 +4,18 @@ const ec2Client = new EC2Client();
 export const syncIpRanges = async () => {
     const newIps = (await (await fetch(`https://ip-ranges.amazonaws.com/ip-ranges.json`)).json()).prefixes
         .filter(obj => obj.region === 'us-east-2' && obj.service === 'EC2').map(obj => obj.ip_prefix);
-    const existingIps = (await ec2Client.send(new DescribeSecurityGroupsCommand({ GroupIds: [process.env.AWS_SECURITY_GROUP] })))
-        .SecurityGroups?.[0]?.IpPermissions?.map(obj => obj.IpRanges?.map(innerObj => innerObj.CidrIp)).flat();
+    const existingIps = (await ec2Client.send(new DescribeSecurityGroupsCommand({ GroupIds: [process.env.DB_SECURITY_GROUP] }))).SecurityGroups
+        .map(securityGroup => securityGroup.IpPermissions
+            .map(ipPermission => ipPermission.IpRanges
+                .filter(obj => obj.Description === 'Lambda')
+                .map(ipRange => ipRange.CidrIp)
+            ).flat()
+        ).flat();
     const addedIps = newIps.filter(newIp => !existingIps.includes(newIp));
     const removedIps = existingIps.filter(existingIp => !newIps.includes(existingIp));
     if (removedIps.length > 0) {
         await ec2Client.send(new RevokeSecurityGroupIngressCommand({
-            GroupId: process.env.AWS_SECURITY_GROUP,
+            GroupId: process.env.DB_SECURITY_GROUP,
             IpPermissions: removedIps.map(ip => ({
                 FromPort: 5432,
                 IpProtocol: 'tcp',
@@ -24,7 +29,7 @@ export const syncIpRanges = async () => {
     }
     if (addedIps.length > 0) {
         await ec2Client.send(new AuthorizeSecurityGroupIngressCommand({
-            GroupId: process.env.AWS_SECURITY_GROUP,
+            GroupId: process.env.DB_SECURITY_GROUP,
             IpPermissions: addedIps.map(ip => ({
                 FromPort: 5432,
                 IpProtocol: 'tcp',

@@ -16,7 +16,7 @@ export const getProperties = async ({ request, reply }) => {
                 nodes {
                     id
                     name
-                    urls { url }
+                    urls: urlsConnection { nodes { url } }
                     lastProcessed
                     archived
                     discovery

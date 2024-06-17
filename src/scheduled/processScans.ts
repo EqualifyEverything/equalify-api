@@ -100,6 +100,6 @@ const scanProcessor = async ({ result, scan }) => {
     // 3. Compare & update nodes
 
     // 4. Delete the scan and move on!
-    await pgClient.query(`DELETE FROM "scans" WHERE "id"=$1`, [scan.id]);
+    // await pgClient.query(`DELETE FROM "scans" WHERE "id"=$1`, [scan.id]);
     return;
 }
