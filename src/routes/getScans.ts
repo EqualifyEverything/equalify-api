@@ -3,7 +3,7 @@ import { graphqlQuery } from '../utils/index.js';
 export const getScans = async ({ request, reply }) => {
     const response = (await graphqlQuery({
         query: `query($first: Int, $offset: Int){
-            scans(first: $first, offset: $offset, ${(request.query.scanIds) ? `filter: { id: {in: [
+            scans: scansConnection(first: $first, offset: $offset, ${(request.query.scanIds) ? `filter: { id: {in: [
                         ${request.query.scanIds.split(',').map(obj => `"${obj}"`).join()}
                     ]}}` : ''}
                 ) { 

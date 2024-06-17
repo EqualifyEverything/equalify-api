@@ -3,7 +3,7 @@ import { graphqlQuery } from '../utils/index.js';
 export const getUpdates = async ({ request, reply }) => {
     const response = (await graphqlQuery({
         query: `query($first: Int, $offset: Int){
-            updates(first: $first, offset: $offset, ${(request.query.startDate && request.query.endDate) ? `filter: {
+            updates: updatesConnection(first: $first, offset: $offset, ${(request.query.startDate && request.query.endDate) ? `filter: {
                 created_at: { greaterThan: "${request.query.startDate}" },
                 created_at: { lessThan: "${request.query.endDate}" }
             }` : ''}

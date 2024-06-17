@@ -7,83 +7,23 @@ export const getResults = async ({ request, reply }) => {
     */
     const response = await graphqlQuery({
         query: `{
-            urls {
-                nodes {
-                    urlId: id
-                    url
-                }
-            }
-            messages {
-                nodes {
-                    id
-                    message
-                    type
-                    relatedTagIds: tagIds
-                    relatedNodeIds: enodeIds
-                }
-            }
-            tags {
-                nodes {
-                    tagId: id
-                    tag
-                }
-            }
-            nodes: enodes {
-                nodes {
-                    nodeId: id
-                    html
-                    targets
-                    relatedUrlId: urlId
-                    equalified
-                }
-            }
+            urls {urlId:id url}
+            messages {id message type relatedTagIds:tagIds relatedNodeIds:enodeIds}
+            tags {tagId:id tag}
+            nodes:enodes {nodeId:id html targets relatedUrlId:urlId equalified}
         }`
     });
-    /*
-    // Return should follow the Equalify Schema:
-    {
-        urls: [
-            {
-                urlId: 'uuid',
-                url: 'string',
-            },
-        ],
-        messages: [
-            {
-                message: 'string', 
-                relatedTagIds: ['uuid'],
-                relatedNodeIds: ['uuid'],
-                type: 'enum (pass/error/violation)',
-            },
-        ],
-        tags: [
-            {
-                tagId: 'uuid',
-                tag: 'string',
-            },
-        ],
-        nodes: [
-            {
-                nodeId: 'uuid',
-                html: 'string',
-                targets: ['string'], // OPTIONAL
-                relatedUrlId: 'uuid',
-                equalified: 'boolean',
-            }
-        ]
-    }
-    */
     return {
-        urls: response.data.urls.nodes,
-        nodes: response.data.nodes.nodes.map(obj => ({
+        urls: response.data.urls,
+        nodes: response.data.nodes.map(obj => ({
             ...obj,
             targets: JSON.parse(obj.targets),
         })),
-        messages: response.data.messages.nodes.map(obj => ({
+        messages: response.data.messages.map(obj => ({
             ...obj,
             relatedTagIds: JSON.parse(obj.relatedTagIds),
             relatedNodeIds: JSON.parse(obj.relatedNodeIds),
         })),
-        tags: response.data.tags.nodes,
+        tags: response.data.tags,
     };
 }

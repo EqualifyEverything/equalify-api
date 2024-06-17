@@ -3,7 +3,7 @@ import { graphqlQuery } from '../utils/index.js';
 export const getProperties = async ({ request, reply }) => {
     const response = (await graphqlQuery({
         query: `query($first: Int, $offset: Int){
-            properties(first: $first, offset: $offset, orderBy: UPDATED_AT_DESC, 
+            properties: propertiesConnection(first: $first, offset: $offset, orderBy: UPDATED_AT_DESC, 
                 ${(request.query.propertyIds || request.query.propertyDiscovery || request.query.propertyUrls) ? `
                     filter: {
                         ${request.query.propertyIds ? `id: {in: [
@@ -16,11 +16,7 @@ export const getProperties = async ({ request, reply }) => {
                 nodes {
                     id
                     name
-                    urls {
-                      nodes {
-                        url
-                      }
-                    }
+                    urls { url }
                     lastProcessed
                     archived
                     discovery
