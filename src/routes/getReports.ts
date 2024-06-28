@@ -21,12 +21,20 @@ export const getReports = async ({ request, reply }) => {
         },
     }))?.data;
 
+    const reports = response?.reports?.nodes?.map(obj => ({
+        ...obj,
+        filters: obj?.filters ? JSON.parse(obj?.filters) : null,
+    }));
+
+    await Promise.allSettled(reports.map(report => new Promise(async (res) => {
+        report.activeIssues = 12;
+        report.mostCommonIssue = `Accessibility issue`;
+        res(1);
+    })));
+
     return {
         status: 'success',
-        result: response?.reports?.nodes?.map(obj => ({
-            ...obj,
-            filters: obj?.filters ? JSON.parse(obj?.filters) : null,
-        })),
+        result: reports,
         total: response?.reports?.totalCount,
     };
 }
