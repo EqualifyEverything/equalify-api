@@ -3,9 +3,7 @@ import { graphqlQuery } from '#src/utils';
 export const getReports = async ({ request, reply }) => {
     const response = (await graphqlQuery({
         query: `query($first: Int, $offset: Int){
-            reports: reportsConnection(first: $first, offset: $offset, ${(request.query.reportIds) ? `filter: { id: {in: [
-                    ${request.query.reportIds.split(',').map(obj => `"${obj}"`).join()}
-                ]}}` : ''}
+            reports: reportsConnection(first: $first, offset: $offset, ${(request.query.reportId) ? `filter: { id: {eq: "${request.query.reportId}"}}` : ''}
             ) { 
                 nodes {
                     id
