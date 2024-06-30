@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import { addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, getProperties, getReports, getResults, getScans, getUpdates, graphql, help, updateProperties, updateReports } from '#src/routes';
+import { addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, getFilters, getProperties, getReports, getResults, getScans, getUpdates, graphql, help, updateProperties, updateReports } from '#src/routes';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 export const fastify = Fastify({ logger: true });
 const cognitoJwtVerifier = CognitoJwtVerifier.create({
@@ -25,6 +25,7 @@ fastify.get('/get/properties', {}, async (request, reply) => getProperties({ req
 fastify.get('/get/updates', {}, async (request, reply) => getUpdates({ request, reply }));
 fastify.get('/get/scans', {}, async (request, reply) => getScans({ request, reply }));
 fastify.get('/get/reports', {}, async (request, reply) => getReports({ request, reply }));
+fastify.get('/get/filters', {}, async (request, reply) => getFilters({ request, reply }));
 
 // POST requests
 fastify.post('/add/results', {}, async (request, reply) => addResults({ request, reply }));
