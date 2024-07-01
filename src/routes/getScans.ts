@@ -12,7 +12,14 @@ export const getScans = async ({ request, reply }) => {
                     createdAt
                     processing
                     jobId
-                    results
+                    property {
+                        id
+                        name
+                    }
+                    url {
+                        id
+                        url
+                    }
                 }
                 totalCount
             }
