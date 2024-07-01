@@ -24,6 +24,12 @@ export const getFilters = async ({ request, reply }) => {
 
     return {
         status: 'success',
-        result: { ...response, statuses: { label: 'Active', value: 'Active' } },
+        result: {
+            messages: response.messages.map(obj => ({ ...obj, type: 'messages' })),
+            tags: response.tags.map(obj => ({ ...obj, type: 'tags' })),
+            properties: response.properties.map(obj => ({ ...obj, type: 'properties' })),
+            urls: response.urls.map(obj => ({ ...obj, type: 'urls' })),
+            statuses: [{ label: 'Active', value: 'active' }],
+        },
     };
 }
