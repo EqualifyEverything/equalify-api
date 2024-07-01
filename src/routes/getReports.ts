@@ -3,7 +3,7 @@ import { graphqlQuery } from '#src/utils';
 export const getReports = async ({ request, reply }) => {
     const response = (await graphqlQuery({
         query: `query($first: Int, $offset: Int){
-            reports: reportsConnection(first: $first, offset: $offset, ${(request.query.reportId) ? `filter: { id: {eq: "${request.query.reportId}"}}` : ''}
+            reports: reportsConnection(first: $first, offset: $offset, ${(request.query.reportId) ? `filter: { id: {equalTo: "${request.query.reportId}"}}` : ''}
             ) { 
                 nodes {
                     id
@@ -24,7 +24,7 @@ export const getReports = async ({ request, reply }) => {
         filters: obj?.filters ? JSON.parse(obj?.filters) : null,
     }));
 
-    await Promise.allSettled(reports.map(report => new Promise(async (res) => {
+    await Promise.allSettled(reports?.map(report => new Promise(async (res) => {
         report.activeIssues = 12;
         report.mostCommonIssue = `Accessibility issue`;
         res(1);

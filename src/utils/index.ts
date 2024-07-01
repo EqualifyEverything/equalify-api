@@ -1,5 +1,5 @@
 export * from './graphqlQuery'
-export * from './pgClient'
+export * from './db'
 export * from './openai'
 export * from './validateUuid'
 export * from './validateUrl'

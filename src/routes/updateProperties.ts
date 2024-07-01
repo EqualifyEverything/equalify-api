@@ -1,5 +1,5 @@
 import { jwtClaims } from '#src/app';
-import { pgClient, validateDiscovery, validateDiscoveryOptions, validateUrl, validateUuid } from '#src/utils';
+import { db, validateDiscovery, validateDiscoveryOptions, validateUrl, validateUuid } from '#src/utils';
 
 export const updateProperties = async ({ request, reply }) => {
     if (!validateUuid(request.body.propertyId)) {
@@ -27,14 +27,14 @@ export const updateProperties = async ({ request, reply }) => {
         }
     }
 
-    await pgClient.connect();
-    const original = (await pgClient.query(`
+    await db.connect();
+    const original = (await db.query(`
         SELECT * FROM "properties" WHERE "id"=$1 AND "user_id"=$2
     `, [request.body.propertyId, jwtClaims.sub]))?.rows?.[0];
-    await pgClient.query(`
+    await db.query(`
         UPDATE "properties" SET "name"=$1, "sitemapUrl"=$2, "discovery"=$3, "archived"=$4, "processed"=$5 WHERE "id"=$6 AND "user_id"=$7
     `, [request.body.propertyName ?? original.name, request.body.sitemapUrl ?? original.sitemapUrl, request.body.propertyDiscovery ?? original.discovery, request.body.propertyArchived ?? original.archived, request.body.propertyProcessed ?? original.processed, request.body.propertyId, jwtClaims.sub]);
-    await pgClient.clean();
+    await db.clean();
 
     return {
         status: 'success',

@@ -1,5 +1,5 @@
 import { jwtClaims } from '#src/app';
-import { pgClient, validateUrl } from '#src/utils';
+import { db, validateUrl } from '#src/utils';
 
 export const addScans = async ({ request, reply }) => {
     if (!(request.body.propertyIds || request.body.urlIds)) {
@@ -9,9 +9,9 @@ export const addScans = async ({ request, reply }) => {
         }
     }
 
-    await pgClient.connect();
+    await db.connect();
     for (const propertyId of request.body.propertyIds ?? []) {
-        const propertyExists = (await pgClient.query(`SELECT "id" FROM "properties" WHERE "id"=$1`, [propertyId])).rows?.[0]?.id;
+        const propertyExists = (await db.query(`SELECT "id" FROM "properties" WHERE "id"=$1`, [propertyId])).rows?.[0]?.id;
         if (!propertyExists) {
             return {
                 status: 'error',
@@ -19,7 +19,7 @@ export const addScans = async ({ request, reply }) => {
             }
         }
 
-        const urls = (await pgClient.query(`SELECT "id", "url" FROM "urls" WHERE "property_id"=$1`, [propertyId])).rows;
+        const urls = (await db.query(`SELECT "id", "url" FROM "urls" WHERE "property_id"=$1`, [propertyId])).rows;
         for (const { id, url } of urls) {
             if (!validateUrl(url)) {
                 return {
@@ -35,14 +35,14 @@ export const addScans = async ({ request, reply }) => {
                     body: JSON.stringify({ url })
                 })).json();
                 console.log(JSON.stringify({ scanResponse }));
-                await pgClient.query(`
+                await db.query(`
                     INSERT INTO "scans" ("user_id", "property_id", "url_id", "job_id") VALUES ($1, $2, $3, $4) RETURNING "id"
                 `, [jwtClaims.sub, propertyId, id, parseInt(scanResponse?.jobID)]);
             }
         }
     }
     for (const urlId of request.body.urlIds ?? []) {
-        const url = (await pgClient.query(`SELECT "url" FROM "urls" WHERE "id"=$1`, [urlId])).rows?.[0]?.url;
+        const url = (await db.query(`SELECT "url" FROM "urls" WHERE "id"=$1`, [urlId])).rows?.[0]?.url;
         if (!url) {
             return {
                 status: 'error',
@@ -57,12 +57,12 @@ export const addScans = async ({ request, reply }) => {
         }
         else {
             const jobId = (await (await fetch(`https://scan.equalify.app/generate/url`, { method: 'POST', body: JSON.stringify({ url }) })).json())?.jobID;
-            await pgClient.query(`
+            await db.query(`
                 INSERT INTO "scans" ("user_id", "url_id", "job_id") VALUES ($1, $2, $3) RETURNING "id"
             `, [jwtClaims.sub, urlId, jobId]);
         }
     }
-    await pgClient.clean();
+    await db.clean();
 
     return {
         status: 'success',

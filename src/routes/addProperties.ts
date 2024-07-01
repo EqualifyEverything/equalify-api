@@ -1,5 +1,5 @@
 import { jwtClaims } from '#src/app';
-import { formatId, pgClient, validateDiscovery, validateDiscoveryOptions, validateUrl } from '#src/utils';
+import { formatId, db, validateDiscovery, validateDiscoveryOptions, validateUrl } from '#src/utils';
 
 export const addProperties = async ({ request, reply }) => {
     if (!request.body.propertyName) {
@@ -33,12 +33,12 @@ export const addProperties = async ({ request, reply }) => {
         }
     }
 
-    await pgClient.connect();
-    const id = (await pgClient.query(`
+    await db.connect();
+    const id = (await db.query(`
         INSERT INTO "properties" ("user_id", "name", "discovery") VALUES ($1, $2, $3) RETURNING "id"
     `, [jwtClaims.sub, request.body.propertyName, request.body.discovery])).rows?.[0]?.id;
-    await pgClient.query(`INSERT INTO "urls" ("user_id", "property_id", "url") VALUES ($1, $2, $3)`, [jwtClaims.sub, id, request.body.sitemapUrl]);
-    await pgClient.clean();
+    await db.query(`INSERT INTO "urls" ("user_id", "property_id", "url") VALUES ($1, $2, $3)`, [jwtClaims.sub, id, request.body.sitemapUrl]);
+    await db.clean();
 
     return {
         status: 'success',

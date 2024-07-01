@@ -1,12 +1,12 @@
 import { jwtClaims } from '#src/app';
-import { formatId, pgClient } from '#src/utils';
+import { formatId, db } from '#src/utils';
 
 export const addResults = async ({ request, reply }) => {
-    await pgClient.connect();
-    const id = (await pgClient.query(`
+    await db.connect();
+    const id = (await db.query(`
         INSERT INTO "results" ("user_id") VALUES ($1) RETURNING "id"
     `, [jwtClaims.sub])).rows?.[0]?.id;
-    await pgClient.clean();
+    await db.clean();
 
     return {
         status: 'success',

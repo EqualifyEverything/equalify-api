@@ -1,14 +1,14 @@
-import { graphqlQuery, pgClient } from '#src/utils';
+import { graphqlQuery, db } from '#src/utils';
 
 export const getResults = async ({ request, reply }) => {
     /*
     Ability to filter by propertyIds, urlIds, nodeIds, nodeUpdateIds, messageIds, and tagIds
     Messages, Tags, Properties, Pages are sorted by properties related to the most nodes w/ nodeEqualified set to false (most to least)
     */
-    await pgClient.connect();
-    const reports = (await pgClient.query(`SELECT "id", "name", "filters" FROM "reports" WHERE "id" = $1`, [request.query.reportId])).rows;
+    await db.connect();
+    const reports = (await db.query(`SELECT "id", "name", "filters" FROM "reports" WHERE "id" = $1`, [request.query.reportId])).rows;
     console.log(JSON.stringify(reports));
-    await pgClient.clean();
+    await db.clean();
     const response = await graphqlQuery({
         query: `{
             urls {urlId:id url}

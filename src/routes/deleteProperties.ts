@@ -1,5 +1,5 @@
 import { jwtClaims } from '#src/app';
-import { pgClient, validateUuid } from '#src/utils';
+import { db, validateUuid } from '#src/utils';
 
 export const deleteProperties = async ({ request, reply }) => {
     if (!request.query.propertyId) {
@@ -15,11 +15,11 @@ export const deleteProperties = async ({ request, reply }) => {
         }
     }
 
-    await pgClient.connect();
-    const deletedIds = (await pgClient.query(`
+    await db.connect();
+    const deletedIds = (await db.query(`
         DELETE FROM "properties" WHERE "id"=$1 AND "user_id"=$2 RETURNING "id"
     `, [request.query.propertyId, jwtClaims.sub])).rows.map(obj => obj.id);
-    await pgClient.clean();
+    await db.clean();
 
     if (deletedIds.length === 0) {
         return {

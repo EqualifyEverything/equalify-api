@@ -1,5 +1,5 @@
 import { jwtClaims } from '#src/app';
-import { formatId, pgClient } from '#src/utils';
+import { formatId, db } from '#src/utils';
 
 export const addReports = async ({ request, reply }) => {
     if (!request.body.reportName) {
@@ -15,11 +15,11 @@ export const addReports = async ({ request, reply }) => {
         }
     }
 
-    await pgClient.connect();
-    const id = (await pgClient.query(`
+    await db.connect();
+    const id = (await db.query(`
         INSERT INTO "reports" ("user_id", "name", "filters") VALUES ($1, $2, $3) RETURNING "id"
     `, [jwtClaims.sub, request.body.reportName, JSON.stringify(request.body.filters ?? [])])).rows?.[0]?.id;
-    await pgClient.clean();
+    await db.clean();
 
     return {
         status: 'success',

@@ -1,5 +1,5 @@
 import { jwtClaims } from '#src/app';
-import { pgClient, validateUuid } from '#src/utils';
+import { db, validateUuid } from '#src/utils';
 
 export const updateReports = async ({ request, reply }) => {
     if (!validateUuid(request.body.reportId)) {
@@ -15,14 +15,14 @@ export const updateReports = async ({ request, reply }) => {
         }
     }
 
-    await pgClient.connect();
-    const original = (await pgClient.query(`
+    await db.connect();
+    const original = (await db.query(`
         SELECT * FROM "reports" WHERE "id"=$1 AND "user_id"=$2
     `, [request.body.reportId, jwtClaims.sub]))?.rows?.[0];
-    await pgClient.query(`
+    await db.query(`
         UPDATE "reports" SET "name"=$1, "filters"=$2 WHERE "id"=$3 AND "user_id"=$4
     `, [request.body.reportName ?? original.name, request.body.reportFilters ?? original.url, request.body.reportId, jwtClaims.sub]);
-    await pgClient.clean();
+    await db.clean();
 
     return {
         status: 'success',

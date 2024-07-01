@@ -9,7 +9,7 @@ export const getProperties = async ({ request, reply }) => {
                         ${request.query.propertyIds ? `id: {in: [
                             ${request.query.propertyIds.split(',').map(obj => `"${obj}"`).join()}
                         ]},` : ''}
-                        ${request.query.propertyDiscovery ? `propertyDiscovery: {eq: "${request.query.propertyDiscovery}"},` : ''}
+                        ${request.query.propertyDiscovery ? `propertyDiscovery: {equalTo: "${request.query.propertyDiscovery}"},` : ''}
                         ${request.query.propertyUrls ? `sitemapUrl: {in: ${request.query.propertyUrls.split(',').map(obj => `"${obj}"`)}},` : ''}
                     }` : ''}
             ) { 
