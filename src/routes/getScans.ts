@@ -3,7 +3,7 @@ import { graphqlQuery } from '#src/utils';
 export const getScans = async ({ request, reply }) => {
     const response = (await graphqlQuery({
         query: `query($first: Int, $offset: Int){
-            scans: scansConnection(first: $first, offset: $offset, ${(request.query.scanIds) ? `filter: { id: {in: [
+            scans: scansConnection(first: $first, offset: $offset, orderBy: CREATED_AT_DESC, ${(request.query.scanIds) ? `filter: { id: {in: [
                         ${request.query.scanIds.split(',').map(obj => `"${obj}"`).join()}
                     ]}}` : ''}
                 ) { 
@@ -12,6 +12,7 @@ export const getScans = async ({ request, reply }) => {
                     createdAt
                     processing
                     jobId
+                    results
                     property {
                         id
                         name
