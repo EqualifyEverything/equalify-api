@@ -1,6 +1,6 @@
 import { graphqlQuery, db } from '#src/utils';
 
-export const getResults = async ({ request, reply }) => {
+export const getResultsAll = async ({ request, reply }) => {
     /*
     Ability to filter by propertyIds, urlIds, nodeIds, nodeUpdateIds, messageIds, and tagIds
     Messages, Tags, Properties, Pages are sorted by properties related to the most nodes w/ nodeEqualified set to false (most to least)
@@ -25,12 +25,16 @@ export const getResults = async ({ request, reply }) => {
         query: `query($urlIds: [UUID!]){
             nodes: enodes(filter: { urlId: { in: $urlIds } }) {
                 nodeId: id
+                createdAt
                 html
                 targets
                 relatedUrlId: urlId
                 equalified
                 messageNodes {
                     id
+                    node: enode {
+                        equalified
+                    }
                     message {
                         id
                         message
@@ -47,6 +51,32 @@ export const getResults = async ({ request, reply }) => {
         variables: { urlIds: urls.map(obj => obj.id) },
     });
 
+    const formattedMessages = {};
+    for (const message of response.data.nodes.map(obj => obj.messageNodes).flat()) {
+        if (!formattedMessages?.[message.message.id]) {
+            formattedMessages[message.message.id] = {
+                id: message.id,
+                message: message.message.message,
+                equalifiedCount: 0,
+                activeCount: 0,
+            };
+        }
+        formattedMessages[message.message.id][message.node.equalified ? 'equalifiedCount' : 'activeCount'] += 1;
+    }
+
+    const formattedChart = {};
+    for (const node of response.data.nodes) {
+        const date = node.createdAt.split('T')[0];
+        if (!formattedChart?.[date]) {
+            formattedChart[date] = {
+                date: date,
+                equalified: 0,
+                active: 0,
+            };
+        }
+        formattedChart[date][node.equalified ? 'equalified' : 'active'] += 1;
+    }
+
     return {
         reportName: report.name,
         urls: urls,
@@ -57,13 +87,20 @@ export const getResults = async ({ request, reply }) => {
             relatedUrlId: obj.relatedUrlId,
             equalified: obj.equalified,
         })),
-        messages: response.data.nodes.map(obj => obj.messageNodes).flat().map(obj => ({
-            id: obj.message.id,
-            message: obj.message.message,
-        })),
-        tags: response.data.nodes.map(obj => obj.messageNodes).flat().map(obj => obj.message.messageTags).flat().map(obj => ({
-            id: obj.tag.id,
-            tag: obj.tag.tag,
-        })),
+        messages: Object.values(formattedMessages)
+            .sort((a, b) => a.activeCount > b.activeCount ? -1 : 1)
+            .map(obj => ({
+                ...obj,
+                totalCount: obj.equalifiedCount + obj.activeCount,
+            })),
+        tags: response.data.nodes
+            .map(obj => obj.messageNodes).flat()
+            .map(obj => obj.message.messageTags).flat()
+            .map(obj => ({
+                id: obj.tag.id,
+                tag: obj.tag.tag,
+            })),
+        chart: Object.values(formattedChart)
+            .sort((a, b) => a.date > b.date ? -1 : 1),
     };
 }

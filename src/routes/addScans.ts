@@ -56,7 +56,7 @@ export const addScans = async ({ request, reply }) => {
             }
         }
         else {
-            const jobId = (await (await fetch(`https://scan.equalify.app/generate/url`, { method: 'POST', body: JSON.stringify({ url }) })).json())?.jobID;
+            const jobId = (await (await fetch(`https://scan.equalify.app/generate/sitemap`, { method: 'POST', body: JSON.stringify({ url }) })).json())?.jobID;
             await db.query(`
                 INSERT INTO "scans" ("user_id", "url_id", "job_id") VALUES ($1, $2, $3) RETURNING "id"
             `, [jwtClaims.sub, urlId, jobId]);

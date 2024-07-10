@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import { addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, getCharts, getFilters, getProperties, getReports, getResults, getScans, getUpdates, graphql, help, updateProperties, updateReports } from '#src/routes';
+import { addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, getCharts, getFilters, getProperties, getReports, getResultsAll, getResultsMessages, getResultsSchema, getResultsTags, getResultsUrls, getScans, getUpdates, graphql, help, updateProperties, updateReports } from '#src/routes';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 export const fastify = Fastify();
 const cognitoJwtVerifier = CognitoJwtVerifier.create({
@@ -20,7 +20,12 @@ fastify.addHook('preHandler', async (request, reply) => {
 })
 
 // GET requests
-fastify.get('/get/results', {}, async (request, reply) => getResults({ request, reply }));
+fastify.get('/get/results', {}, async (request, reply) => getResultsAll({ request, reply }));
+fastify.get('/get/results/schema', {}, async (request, reply) => getResultsSchema({ request, reply }));
+fastify.get('/get/results/all', {}, async (request, reply) => getResultsAll({ request, reply }));
+fastify.get('/get/results/messages', {}, async (request, reply) => getResultsMessages({ request, reply }));
+fastify.get('/get/results/tags', {}, async (request, reply) => getResultsTags({ request, reply }));
+fastify.get('/get/results/urls', {}, async (request, reply) => getResultsUrls({ request, reply }));
 fastify.get('/get/properties', {}, async (request, reply) => getProperties({ request, reply }));
 fastify.get('/get/updates', {}, async (request, reply) => getUpdates({ request, reply }));
 fastify.get('/get/scans', {}, async (request, reply) => getScans({ request, reply }));
