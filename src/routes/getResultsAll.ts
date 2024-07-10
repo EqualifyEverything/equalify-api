@@ -55,7 +55,7 @@ export const getResultsAll = async ({ request, reply }) => {
     for (const message of response.data.nodes.map(obj => obj.messageNodes).flat()) {
         if (!formattedMessages?.[message.message.id]) {
             formattedMessages[message.message.id] = {
-                id: message.id,
+                id: message.message.id,
                 message: message.message.message,
                 equalifiedCount: 0,
                 activeCount: 0,
