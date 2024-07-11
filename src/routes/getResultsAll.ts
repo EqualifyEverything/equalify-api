@@ -64,6 +64,18 @@ export const getResultsAll = async ({ request, reply }) => {
         formattedMessages[message.message.id][message.node.equalified ? 'equalifiedCount' : 'activeCount'] += 1;
     }
 
+    const formattedTags = {};
+    for (const tag of response.data.nodes
+        .map(obj => obj.messageNodes).flat()
+        .map(obj => obj.message.messageTags).flat().map(obj => obj.tag)) {
+        if (!formattedTags?.[tag.tag]) {
+            formattedTags[tag.tag] = {
+                id: tag.id,
+                tag: tag.tag,
+            };
+        }
+    }
+
     const formattedChart = {};
     for (const node of response.data.nodes) {
         const date = node.createdAt.split('T')[0];
@@ -93,13 +105,7 @@ export const getResultsAll = async ({ request, reply }) => {
                 ...obj,
                 totalCount: obj.equalifiedCount + obj.activeCount,
             })),
-        tags: response.data.nodes
-            .map(obj => obj.messageNodes).flat()
-            .map(obj => obj.message.messageTags).flat()
-            .map(obj => ({
-                id: obj.tag.id,
-                tag: obj.tag.tag,
-            })),
+        tags: Object.values(formattedTags),
         chart: Object.values(formattedChart)
             .sort((a, b) => a.date > b.date ? -1 : 1),
     };

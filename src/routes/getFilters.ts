@@ -29,7 +29,10 @@ export const getFilters = async ({ request, reply }) => {
             tags: response.tags.map(obj => ({ ...obj, type: 'tags' })),
             properties: response.properties.map(obj => ({ ...obj, type: 'properties' })),
             urls: response.urls.map(obj => ({ ...obj, type: 'urls' })),
-            statuses: [{ label: 'Active', value: 'active' }],
+            statuses: [
+                { label: 'Active', value: 'active', type: 'status' },
+                { label: 'Equalified', value: 'equalified', type: 'status' },
+            ],
         },
     };
 }
