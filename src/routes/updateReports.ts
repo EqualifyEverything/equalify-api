@@ -21,7 +21,7 @@ export const updateReports = async ({ request, reply }) => {
     `, [request.body.reportId, jwtClaims.sub]))?.rows?.[0];
     await db.query(`
         UPDATE "reports" SET "name"=$1, "filters"=$2 WHERE "id"=$3 AND "user_id"=$4
-    `, [request.body.reportName ?? original.name, request.body.reportFilters ?? original.url, request.body.reportId, jwtClaims.sub]);
+    `, [request.body.reportName ?? original.name, JSON.stringify(request.body.reportFilters ?? original.filters), request.body.reportId, jwtClaims.sub]);
     await db.clean();
 
     return {
