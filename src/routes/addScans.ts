@@ -11,55 +11,56 @@ export const addScans = async ({ request, reply }) => {
 
     await db.connect();
     for (const propertyId of request.body.propertyIds ?? []) {
-        const propertyExists = (await db.query(`SELECT "id" FROM "properties" WHERE "id"=$1`, [propertyId])).rows?.[0]?.id;
-        if (!propertyExists) {
+        const propertyDiscovery = (await db.query(`SELECT "discovery" FROM "properties" WHERE "id"=$1`, [propertyId])).rows?.[0]?.discovery;
+        if (!propertyDiscovery) {
             return {
                 status: 'error',
                 message: 'One or more of the provided propertyIds is invalid',
             }
         }
-
         const urls = (await db.query(`SELECT "id", "url" FROM "urls" WHERE "property_id"=$1`, [propertyId])).rows;
         for (const { id, url } of urls) {
-            if (!validateUrl(url)) {
-                return {
-                    status: 'error',
-                    message: 'One or more of the provided propertyIds has an invalid url',
+            try {
+                if (!validateUrl(url)) {
+                    return {
+                        status: 'error',
+                        message: 'One or more of the provided propertyIds has an invalid url',
+                    }
+                }
+                else {
+                    const discoveryDict = {
+                        single: 'url',
+                        sitemap: 'sitemapurl',
+                        discovery_process: 'sitemapurl',
+                    }
+
+                    const scanResponse = await (await fetch(`https://scan.equalify.app/generate/${discoveryDict?.[propertyDiscovery] ?? 'url'}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: (propertyDiscovery === 'sitemap' && !url.endsWith('.xml')) ? `${url}/sitemap.xml` : url })
+                    })).json();
+                    console.log(JSON.stringify({ scanResponse }));
+                    const scanArray = scanResponse?.jobID ? [{ JobID: scanResponse?.jobID, url: url }] : scanResponse.map(obj => ({ JobID: obj.JobID, url: obj.URL }));
+
+                    for (const { JobID, url } of scanArray) {
+                        const urlId = (await db.query({
+                            text: `SELECT "id" FROM "urls" WHERE "user_id"=$1 AND "url"=$2 AND "property_id"=$3`,
+                            values: [jwtClaims.sub, url, propertyId],
+                        })).rows?.[0]?.id ?? (await db.query({
+                            text: `INSERT INTO "urls" ("user_id", "url", "property_id") VALUES ($1, $2, $3) RETURNING "id"`,
+                            values: [jwtClaims.sub, url, propertyId]
+                        })).rows?.[0]?.id;
+
+                        await db.query({
+                            text: `INSERT INTO "scans" ("user_id", "property_id", "url_id", "job_id") VALUES ($1, $2, $3, $4) RETURNING "id"`,
+                            values: [jwtClaims.sub, propertyId, urlId, parseInt(JobID)]
+                        });
+                    }
                 }
             }
-            else {
-                console.log(JSON.stringify({ url }));
-                const scanResponse = await (await fetch(`https://scan.equalify.app/generate/url`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url })
-                })).json();
-                console.log(JSON.stringify({ scanResponse }));
-                await db.query(`
-                    INSERT INTO "scans" ("user_id", "property_id", "url_id", "job_id") VALUES ($1, $2, $3, $4) RETURNING "id"
-                `, [jwtClaims.sub, propertyId, id, parseInt(scanResponse?.jobID)]);
+            catch (err) {
+                console.log(err);
             }
-        }
-    }
-    for (const urlId of request.body.urlIds ?? []) {
-        const url = (await db.query(`SELECT "url" FROM "urls" WHERE "id"=$1`, [urlId])).rows?.[0]?.url;
-        if (!url) {
-            return {
-                status: 'error',
-                message: 'One or more of the provided urlIds is invalid',
-            }
-        }
-        else if (!validateUrl(url)) {
-            return {
-                status: 'error',
-                message: 'One or more of the provided urlIds is invalid',
-            }
-        }
-        else {
-            const jobId = (await (await fetch(`https://scan.equalify.app/generate/sitemap`, { method: 'POST', body: JSON.stringify({ url }) })).json())?.jobID;
-            await db.query(`
-                INSERT INTO "scans" ("user_id", "url_id", "job_id") VALUES ($1, $2, $3) RETURNING "id"
-            `, [jwtClaims.sub, urlId, jobId]);
         }
     }
     await db.clean();
