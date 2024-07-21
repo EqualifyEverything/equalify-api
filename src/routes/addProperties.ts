@@ -8,10 +8,10 @@ export const addProperties = async ({ request, reply }) => {
             message: 'Property Name is required.',
         }
     }
-    else if (!request.body.sitemapUrl) {
+    else if (!request.body.propertyUrl) {
         return {
             status: 'error',
-            message: 'Sitemap URL is required.',
+            message: 'Property URL is required.',
         }
     }
     else if (!request.body.propertyDiscovery) {
@@ -20,10 +20,10 @@ export const addProperties = async ({ request, reply }) => {
             message: 'Property Discovery settings are required.',
         }
     }
-    else if (!validateUrl(request.body.sitemapUrl)) {
+    else if (!validateUrl(request.body.propertyUrl)) {
         return {
             status: 'error',
-            message: 'Sitemap URL is not valid.',
+            message: 'Property URL is not valid.',
         }
     }
     else if (!validateDiscovery(request.body.propertyDiscovery)) {
@@ -39,7 +39,7 @@ export const addProperties = async ({ request, reply }) => {
     `, [jwtClaims.sub, request.body.propertyName, request.body.propertyDiscovery])).rows?.[0]?.id;
     await db.query(
         `INSERT INTO "urls" ("user_id", "property_id", "url") VALUES ($1, $2, $3)`,
-        [jwtClaims.sub, id, `${request.body.sitemapUrl}${!request.body.sitemapUrl.endsWith('/') ? '/' : ''}`],
+        [jwtClaims.sub, id, `${request.body.propertyUrl}${!request.body.propertyUrl.endsWith('/') ? '/' : ''}`],
     );
     await db.clean();
 
