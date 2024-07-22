@@ -31,7 +31,6 @@ export const addScans = async ({ request, reply }) => {
                     const discoveryDict = {
                         single: 'url',
                         sitemap: 'sitemapurl',
-                        discovery_process: 'sitemapurl',
                     }
 
                     const scanResponse = await (await fetch(`https://scan.equalify.app/generate/${discoveryDict?.[propertyDiscovery] ?? 'url'}`, {
