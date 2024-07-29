@@ -4,6 +4,7 @@ export const processScans = async () => {
     // This route is called once every minute by Amazon EventBridge Scheduler
     await db.connect();
     const scans = (await db.query(`SELECT "id", "job_id", "property_id", "user_id" FROM "scans" WHERE "processing"=TRUE ORDER BY "created_at" DESC`)).rows;
+    console.log(scans);
     await Promise.allSettled(scans.map(scan => new Promise(async (res) => {
         try {
             const { result, status } = await (await fetch(`https://scan.equalify.app/results/${scan.job_id}`)).json();

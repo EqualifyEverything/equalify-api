@@ -39,9 +39,8 @@ export const addScans = async ({ request, reply }) => {
                         body: JSON.stringify({ url: (propertyDiscovery === 'sitemap' && !url.endsWith('.xml')) ? `${url}/sitemap.xml` : url })
                     })).json();
                     console.log(JSON.stringify({ scanResponse }));
-                    const scanArray = scanResponse?.jobID ? [{ JobID: scanResponse?.jobID, url: url }] : scanResponse.map(obj => ({ JobID: obj.JobID, url: obj.URL }));
 
-                    for (const { JobID, url } of scanArray) {
+                    for (const { jobId, url } of scanResponse?.jobs ?? []) {
                         const urlId = (await db.query({
                             text: `SELECT "id" FROM "urls" WHERE "user_id"=$1 AND "url"=$2 AND "property_id"=$3`,
                             values: [jwtClaims.sub, url, propertyId],
@@ -52,7 +51,7 @@ export const addScans = async ({ request, reply }) => {
 
                         await db.query({
                             text: `INSERT INTO "scans" ("user_id", "property_id", "url_id", "job_id") VALUES ($1, $2, $3, $4) RETURNING "id"`,
-                            values: [jwtClaims.sub, propertyId, urlId, parseInt(JobID)]
+                            values: [jwtClaims.sub, propertyId, urlId, parseInt(jobId)]
                         });
                     }
                 }

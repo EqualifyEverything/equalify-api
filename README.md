@@ -1,4 +1,4 @@
-<img src="https://equalify.dev/equalify.svg" alt="Equalify Logo" width="300">
+<img src="https://dashboard.equalify.app/equalify.svg" alt="Equalify Logo" width="300">
 
 # Equalify API
 
@@ -13,10 +13,10 @@ Our API is stateless and is intended to run ephemerally on serverless environmen
 ## Important Links
 
 [Postman Collection](https://documenter.getpostman.com/view/26880150/2sA3BoarvB)  
-[GitBook Documentation](https://docs.equalify.dev/)
+[GitBook Documentation](https://docs.equalify.app/)
 
-Production environment: https://api.equalify.dev  
-Staging environment: https://api-staging.equalify.dev  
+Production environment: https://api.equalify.app +
+Staging environment: https://api.equalify.dev  
 Local environment: http://localhost:3000
 
 ## Setup
