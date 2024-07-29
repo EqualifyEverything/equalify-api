@@ -32,8 +32,8 @@ export const updateProperties = async ({ request, reply }) => {
         SELECT * FROM "properties" WHERE "id"=$1 AND "user_id"=$2
     `, [request.body.propertyId, jwtClaims.sub]))?.rows?.[0];
     await db.query(`
-        UPDATE "properties" SET "name"=$1, "propertyUrl"=$2, "discovery"=$3, "archived"=$4, "processed"=$5 WHERE "id"=$6 AND "user_id"=$7
-    `, [request.body.propertyName ?? original.name, request.body.propertyUrl ?? original.propertyUrl, request.body.propertyDiscovery ?? original.discovery, request.body.propertyArchived ?? original.archived, request.body.propertyProcessed ?? original.processed, request.body.propertyId, jwtClaims.sub]);
+        UPDATE "properties" SET "name"=$1, "property_url"=$2, "discovery"=$3, "archived"=$4, "processed"=$5 WHERE "id"=$6 AND "user_id"=$7
+    `, [request.body.propertyName ?? original.name, request.body.propertyUrl ?? original.property_url, request.body.propertyDiscovery ?? original.discovery, request.body.propertyArchived ?? original.archived, request.body.propertyProcessed ?? original.processed, request.body.propertyId, jwtClaims.sub]);
     await db.clean();
 
     return {

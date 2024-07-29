@@ -35,12 +35,8 @@ export const addProperties = async ({ request, reply }) => {
 
     await db.connect();
     const id = (await db.query(`
-        INSERT INTO "properties" ("user_id", "name", "discovery") VALUES ($1, $2, $3) RETURNING "id"
-    `, [jwtClaims.sub, request.body.propertyName, request.body.propertyDiscovery])).rows?.[0]?.id;
-    await db.query(
-        `INSERT INTO "urls" ("user_id", "property_id", "url") VALUES ($1, $2, $3)`,
-        [jwtClaims.sub, id, `${request.body.propertyUrl}${!request.body.propertyUrl.endsWith('/') ? '/' : ''}`],
-    );
+        INSERT INTO "properties" ("user_id", "name", "discovery", "property_url") VALUES ($1, $2, $3, $4) RETURNING "id"
+    `, [jwtClaims.sub, request.body.propertyName, request.body.propertyDiscovery, `${request.body.propertyUrl}${!request.body.propertyUrl.endsWith('/') ? '/' : ''}`])).rows?.[0]?.id;
     await db.clean();
 
     return {
