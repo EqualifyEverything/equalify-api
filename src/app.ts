@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
-import { addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, getCharts, getFilters, getProperties, getReports, getResultsAll, getResultsMessages, getResultsSchema, getResultsTags, getResultsUrls, getScans, getUpdates, graphql, help, updateProperties, updateReports } from '#src/routes';
+import { addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, getApikey, getCharts, getFilters, getProperties, getReports, getResultsAll, getResultsMessages, getResultsSchema, getResultsTags, getResultsUrls, getScans, getUpdates, graphql, help, updateProperties, updateReports } from '#src/routes';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
+import { db } from './utils';
 export const fastify = Fastify();
 const cognitoJwtVerifier = CognitoJwtVerifier.create({
     userPoolId: process.env.USER_POOL_ID,
@@ -11,11 +12,19 @@ export const jwtClaims = { sub: null };
 
 fastify.addHook('preHandler', async (request, reply) => {
     try {
-        jwtClaims.sub = (await cognitoJwtVerifier.verify(request.headers.authorization?.replace('Bearer ', '')))?.sub;
+        if (request.headers.apikey) {
+            await db.connect();
+            const userId = (await db.query(`SELECT "id" FROM "users" WHERE "apikey"=$1`, [request.headers.apikey])).rows[0].id;
+            await db.clean();
+            jwtClaims.sub = userId;
+        }
+        else {
+            jwtClaims.sub = (await cognitoJwtVerifier.verify(request.headers.authorization?.replace('Bearer ', '')))?.sub;
+        }
     }
     catch (err) {
         console.log(err);
-        reply.code(401).send({ message: `Error: You must include an Authorization header with a valid JWT token` });
+        reply.code(401).send({ message: `Error: You must include an "authorization" header with a valid JWT token or an "apikey" header with a valid API key.` });
     }
 })
 
@@ -32,6 +41,7 @@ fastify.get('/get/scans', {}, async (request, reply) => getScans({ request, repl
 fastify.get('/get/reports', {}, async (request, reply) => getReports({ request, reply }));
 fastify.get('/get/filters', {}, async (request, reply) => getFilters({ request, reply }));
 fastify.get('/get/charts', {}, async (request, reply) => getCharts({ request, reply }));
+fastify.get('/get/apikey', {}, async (request, reply) => getApikey({ request, reply }));
 
 // POST requests
 fastify.post('/add/results', {}, async (request, reply) => addResults({ request, reply }));
