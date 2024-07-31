@@ -89,9 +89,11 @@ export const getResultsAll = async ({ request, reply }) => {
         formattedChart[date][node.equalified ? 'equalified' : 'active'] += 1;
     }
 
+    const nodeUrlIds = [...new Set(response.data.nodes.map(obj => obj.relatedUrlId))];
+
     return {
         reportName: report.name,
-        urls: urls,
+        urls: urls.filter(url => nodeUrlIds.includes(url.id)),
         nodes: response.data.nodes.map(obj => ({
             nodeId: obj.nodeId,
             html: obj.html,
