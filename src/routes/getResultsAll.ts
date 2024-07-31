@@ -7,7 +7,7 @@ export const getResultsAll = async ({ request, reply }) => {
     */
     await db.connect();
     const report = (await db.query(`SELECT "id", "name", "filters" FROM "reports" WHERE "id" = $1`, [request.query.reportId])).rows?.[0];
-    const types = ['properties', 'urls', 'messages', 'nodes', 'tags'];
+    const types = ['properties', 'urls', 'messages', 'nodes', 'tags', 'types'];
     const filters = Object.fromEntries(types.map(obj => [obj, []]));
     for (const type of types) {
         filters[type] = report.filters.filter(obj => obj.type === type).map(obj => obj.value)
@@ -38,6 +38,7 @@ export const getResultsAll = async ({ request, reply }) => {
                     message {
                         id
                         message
+                        type
                         messageTags {
                             tag {
                                 id
@@ -51,12 +52,31 @@ export const getResultsAll = async ({ request, reply }) => {
         variables: { urlIds: urls.map(obj => obj.id) },
     });
 
+    const filteredNodes = [];
+    if (filters?.types?.length > 0) {
+        for (const node of response.data.nodes) {
+            const newMessageNodes = [];
+            for (const messageNode of node.messageNodes) {
+                if (filters.types.includes(messageNode.message.type)) {
+                    newMessageNodes.push(messageNode);
+                }
+            }
+            if (newMessageNodes.length > 0) {
+                filteredNodes.push({ ...node, messageNodes: newMessageNodes });
+            }
+        }
+    }
+    else {
+        filteredNodes.push(...response.data.nodes);
+    }
+
     const formattedMessages = {};
-    for (const message of response.data.nodes.map(obj => obj.messageNodes).flat()) {
+    for (const message of filteredNodes.map(obj => obj.messageNodes).flat()) {
         if (!formattedMessages?.[message.message.id]) {
             formattedMessages[message.message.id] = {
                 id: message.message.id,
                 message: message.message.message,
+                type: message.message.type,
                 equalifiedCount: 0,
                 activeCount: 0,
             };
@@ -65,9 +85,11 @@ export const getResultsAll = async ({ request, reply }) => {
     }
 
     const formattedTags = {};
-    for (const tag of response.data.nodes
+    for (const tag of filteredNodes
         .map(obj => obj.messageNodes).flat()
-        .map(obj => obj.message.messageTags).flat().map(obj => obj.tag)) {
+        .map(obj => obj.message.messageTags).flat()
+        .map(obj => obj.tag)
+    ) {
         if (!formattedTags?.[tag.tag]) {
             formattedTags[tag.tag] = {
                 id: tag.id,
@@ -77,7 +99,7 @@ export const getResultsAll = async ({ request, reply }) => {
     }
 
     const formattedChart = {};
-    for (const node of response.data.nodes) {
+    for (const node of filteredNodes) {
         const date = node.createdAt.split('T')[0];
         if (!formattedChart?.[date]) {
             formattedChart[date] = {
@@ -89,12 +111,12 @@ export const getResultsAll = async ({ request, reply }) => {
         formattedChart[date][node.equalified ? 'equalified' : 'active'] += 1;
     }
 
-    const nodeUrlIds = [...new Set(response.data.nodes.map(obj => obj.relatedUrlId))];
+    const nodeUrlIds = [...new Set(filteredNodes.map(obj => obj.relatedUrlId))];
 
     return {
         reportName: report.name,
         urls: urls.filter(url => nodeUrlIds.includes(url.id)),
-        nodes: response.data.nodes.map(obj => ({
+        nodes: filteredNodes.map(obj => ({
             nodeId: obj.nodeId,
             html: obj.html,
             targets: JSON.parse(obj.targets),
