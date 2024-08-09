@@ -1,7 +1,10 @@
-import { postConfirmationConfirmSignUp, postConfirmationConfirmForgotPassword, customMessageSignUp, customMessageResendCode, customMessageForgotPassword, customMessageVerifyUserAttribute, customMessageUpdateUserAttribute } from '#src/cognito/index';
+import { postConfirmationConfirmSignUp, postConfirmationConfirmForgotPassword, customMessageSignUp, customMessageResendCode, customMessageForgotPassword, customMessageVerifyUserAttribute, customMessageUpdateUserAttribute, tokenGeneration } from '#src/cognito/index';
 
 export const cognito = async (event) => {
-    if (event.triggerSource === 'PostConfirmation_ConfirmSignUp') {
+    if (['TokenGeneration_Authentication', 'TokenGeneration_RefreshTokens', 'TokenGeneration_AuthenticateDevice'].includes(event.triggerSource)) {
+        return tokenGeneration(event);
+    }
+    else if (event.triggerSource === 'PostConfirmation_ConfirmSignUp') {
         return postConfirmationConfirmSignUp(event);
     }
     else if (event.triggerSource === 'PostConfirmation_ConfirmForgotPassword') {

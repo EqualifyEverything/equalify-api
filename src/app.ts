@@ -6,7 +6,7 @@ export const fastify = Fastify();
 const cognitoJwtVerifier = CognitoJwtVerifier.create({
     userPoolId: process.env.USER_POOL_ID,
     clientId: process.env.WEB_CLIENT_ID,
-    tokenUse: 'access',
+    tokenUse: 'id',
 });
 export const jwtClaims = { sub: null };
 

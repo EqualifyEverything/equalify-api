@@ -1,4 +1,4 @@
-import { graphqlQuery, db } from '#src/utils';
+import { graphqlQuery, db, hasuraQuery } from '#src/utils';
 
 export const getResultsAll = async ({ request, reply }) => {
     /*
@@ -20,17 +20,25 @@ export const getResultsAll = async ({ request, reply }) => {
     })).rows;
     await db.clean();
 
-    // Make a request
-    const response = await graphqlQuery({
-        query: `query($urlIds: [UUID!]){
-            nodes: enodes(filter: { urlId: { in: $urlIds } }) {
+    const response = await hasuraQuery({
+        request,
+        query: `query (
+            $urlIds: [uuid!],
+            ${filters.types.length > 0 ? '$typeIds: [String],' : ''}
+            ${filters.messages.length > 0 ? '$messageIds: [uuid],' : ''}
+        ) {
+            nodes: enodes(where: {
+                url_id: {_in: $urlIds},
+                ${filters.types.length > 0 ? `message_nodes: {message: {type: {_in: $typeIds}}},` : ``}
+                ${filters.messages.length > 0 ? `message_nodes: {message: {id: {_in: $messageIds}}},` : ``}
+            }) {
                 nodeId: id
-                createdAt
+                createdAt: created_at
                 html
                 targets
-                relatedUrlId: urlId
+                relatedUrlId: url_id
                 equalified
-                messageNodes {
+                messageNodes: message_nodes {
                     id
                     node: enode {
                         equalified
@@ -39,7 +47,7 @@ export const getResultsAll = async ({ request, reply }) => {
                         id
                         message
                         type
-                        messageTags {
+                        messageTags: message_tags {
                             tag {
                                 id
                                 tag
@@ -49,26 +57,14 @@ export const getResultsAll = async ({ request, reply }) => {
                 }
             }
         }`,
-        variables: { urlIds: urls.map(obj => obj.id) },
+        variables: {
+            urlIds: urls.map(obj => obj.id),
+            ...filters.types.length > 0 && ({ typeIds: filters.types }),
+            ...filters.messages.length > 0 && ({ messageIds: filters.messages }),
+        },
     });
-
-    const filteredNodes = [];
-    if (filters?.types?.length > 0) {
-        for (const node of response.data.nodes) {
-            const newMessageNodes = [];
-            for (const messageNode of node.messageNodes) {
-                if (filters.types.includes(messageNode.message.type)) {
-                    newMessageNodes.push(messageNode);
-                }
-            }
-            if (newMessageNodes.length > 0) {
-                filteredNodes.push({ ...node, messageNodes: newMessageNodes });
-            }
-        }
-    }
-    else {
-        filteredNodes.push(...response.data.nodes);
-    }
+    const filteredNodes = response?.nodes ?? [];
+    console.log(JSON.stringify({ filteredNodes }));
 
     const formattedMessages = {};
     for (const message of filteredNodes.map(obj => obj.messageNodes).flat()) {
@@ -119,7 +115,7 @@ export const getResultsAll = async ({ request, reply }) => {
         nodes: filteredNodes.map(obj => ({
             nodeId: obj.nodeId,
             html: obj.html,
-            targets: JSON.parse(obj.targets),
+            targets: obj.targets,
             relatedUrlId: obj.relatedUrlId,
             equalified: obj.equalified,
         })),
