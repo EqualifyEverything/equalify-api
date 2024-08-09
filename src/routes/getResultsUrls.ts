@@ -1,4 +1,4 @@
-import { db, hasuraQuery } from '#src/utils';
+import { db, graphql } from '#src/utils';
 
 export const getResultsUrls = async ({ request, reply }) => {
     await db.connect();
@@ -11,7 +11,7 @@ export const getResultsUrls = async ({ request, reply }) => {
     await db.clean();
 
     // Make a request
-    const response = await hasuraQuery({
+    const response = await graphql({
         request,
         query: `query($urlId: uuid!){
             nodes: enodes(where: { url_id: { _eq: $urlId } }) {
@@ -26,7 +26,7 @@ export const getResultsUrls = async ({ request, reply }) => {
     });
 
     const formattedChart = {};
-    for (const node of response.data.nodes) {
+    for (const node of response.nodes) {
         const date = node.createdAt.split('T')[0];
         if (!formattedChart?.[date]) {
             formattedChart[date] = {
@@ -40,9 +40,9 @@ export const getResultsUrls = async ({ request, reply }) => {
 
     return {
         reportName: report.name,
-        url: response.data.url.url,
-        urlId: response.data.url.id,
-        nodes: response.data.nodes.map(obj => ({
+        url: response.url.url,
+        urlId: response.url.id,
+        nodes: response.nodes.map(obj => ({
             createdAt: obj.createdAt,
             message: obj.messageNodes?.[0]?.message?.message,
             messageId: obj.messageNodes?.[0]?.message?.id,

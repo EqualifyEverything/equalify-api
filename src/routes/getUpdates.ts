@@ -1,7 +1,7 @@
-import { hasuraQuery } from '#src/utils';
+import { graphql } from '#src/utils';
 
 export const getUpdates = async ({ request, reply }) => {
-    const response = await hasuraQuery({
+    const response = await graphql({
         request,
         query: `query($limit: Int, $offset: Int){
             updates: enode_updates_aggregate(limit: $limit, offset: $offset, ${(request.query.startDate && request.query.endDate) ? `where: {

@@ -1,4 +1,4 @@
-import { db, hasuraQuery } from '#src/utils';
+import { db, graphql } from '#src/utils';
 
 export const getResultsTags = async ({ request, reply }) => {
     await db.connect();
@@ -14,7 +14,7 @@ export const getResultsTags = async ({ request, reply }) => {
     })).rows;
     await db.clean();
 
-    const response = await hasuraQuery({
+    const response = await graphql({
         request,
         query: `query($urlIds: [uuid!], $tagId: uuid!){
             nodes: enodes(where: { url_id: { _in: $urlIds } }) {
@@ -41,7 +41,7 @@ export const getResultsTags = async ({ request, reply }) => {
         variables: { urlIds: urls.map(obj => obj.id), tagId: request.query.tagId },
     });
 
-    const filteredNodes = response.data.nodes
+    const filteredNodes = response.nodes
         .filter(obj => obj.messageNodes.map(obj => obj.message.messageTags.map(obj => obj.tag_id)).flat().includes(request.query.messageId));
     const formattedMessages = {};
     for (const message of filteredNodes.map(obj => obj.messageNodes).flat()) {
@@ -72,7 +72,7 @@ export const getResultsTags = async ({ request, reply }) => {
 
     return {
         reportName: report.name,
-        tagName: response.data.tag.tag,
+        tagName: response.tag.tag,
         messages: Object.values(formattedMessages)
             .sort((a, b) => a.activeCount > b.activeCount ? -1 : 1)
             .map(obj => ({

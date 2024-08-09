@@ -1,7 +1,7 @@
-import { hasuraQuery } from '#src/utils';
+import { graphql } from '#src/utils';
 
 export const getFilters = async ({ request, reply }) => {
-    const response = await hasuraQuery({
+    const response = await graphql({
         request,
         query: `{
             messages {

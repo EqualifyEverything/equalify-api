@@ -1,4 +1,4 @@
-import { db, hasuraQuery } from '#src/utils';
+import { db, graphql } from '#src/utils';
 
 export const getResultsSchema = async ({ request, reply }) => {
     /*
@@ -21,7 +21,7 @@ export const getResultsSchema = async ({ request, reply }) => {
     await db.clean();
 
     // Make a request
-    const response = await hasuraQuery({
+    const response = await graphql({
         request,
         query: `query (
             $urlIds: [uuid!],

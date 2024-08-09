@@ -1,7 +1,7 @@
-import { hasuraQuery } from '#src/utils';
+import { graphql } from '#src/utils';
 
 export const getProperties = async ({ request, reply }) => {
-    const response = await hasuraQuery({
+    const response = await graphql({
         request,
         query: `query($limit: Int, $offset: Int){
             properties: properties_aggregate(limit: $limit, offset: $offset, order_by: {updated_at: desc}, 

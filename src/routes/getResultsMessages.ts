@@ -1,4 +1,4 @@
-import { graphqlQuery, db, hasuraQuery } from '#src/utils';
+import { graphqlQuery, db, graphql } from '#src/utils';
 
 export const getResultsMessages = async ({ request, reply }) => {
     await db.connect();
@@ -17,10 +17,10 @@ export const getResultsMessages = async ({ request, reply }) => {
     await db.clean();
 
     // Make a request
-    const response = await hasuraQuery({
+    const response = await graphql({
         request,
         query: `query($urlIds: [uuid!], $messageId: uuid!){
-            nodes: enodes(filter: { urlId: { in: $urlIds } }) {
+            nodes: enodes(where: { url_id: { _in: $urlIds } }) {
                 createdAt: created_at
                 html
                 urlId: url_id
@@ -28,13 +28,13 @@ export const getResultsMessages = async ({ request, reply }) => {
                 url {url}
                 messageNodes: message_nodes {message{id}}
             }
-            message(id: $messageId) {message}
+            message: messages_by_pk(id: $messageId) {message}
         }`,
         variables: { urlIds: urls.map(obj => obj.id), messageId: request.query.messageId },
     });
 
     const formattedChart = {};
-    const filteredNodes = response.data.nodes.filter(obj => obj.messageNodes.map(obj => obj.message.id).includes(request.query.messageId));
+    const filteredNodes = response.nodes.filter(obj => obj.messageNodes.map(obj => obj.message.id).includes(request.query.messageId));
     for (const node of filteredNodes) {
         const date = node.createdAt.split('T')[0];
         if (!formattedChart?.[date]) {
@@ -47,7 +47,7 @@ export const getResultsMessages = async ({ request, reply }) => {
         formattedChart[date][node.equalified ? 'equalified' : 'active'] += 1;
     }
 
-    const [messageName, moreInfoUrl] = response.data.message.message.split(' More information: ');
+    const [messageName, moreInfoUrl] = response.message.message.split(' More information: ');
 
     return {
         reportName: report.name,
