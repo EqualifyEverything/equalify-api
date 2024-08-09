@@ -1,28 +1,26 @@
-import { db, getMode, graphqlQuery } from '#src/utils';
+import { db, getMode, hasuraQuery } from '#src/utils';
 
 export const getReports = async ({ request, reply }) => {
-    const response = (await graphqlQuery({
-        query: `query($first: Int, $offset: Int){
-            reports: reportsConnection(first: $first, offset: $offset, ${(request.query.reportId) ? `filter: { id: {equalTo: "${request.query.reportId}"}}` : ''}
+    const response = await hasuraQuery({
+        request,
+        query: `query($limit: Int, $offset: Int){
+            reports: reports_aggregate(limit: $limit, offset: $offset, ${(request.query.reportId) ? `where: { id: {_eq: "${request.query.reportId}"}}` : ''}
             ) { 
                 nodes {
                     id
                     name
                     filters
                 }
-                totalCount
+                totalCount: aggregate {count}
             }
         }`,
         variables: {
-            first: parseInt(request.query.first ?? 100),
+            limit: parseInt(request.query.limit ?? 100),
             offset: parseInt(request.query.offset ?? 0),
         },
-    }))?.data;
+    });
 
-    const reports = response?.reports?.nodes?.map(obj => ({
-        ...obj,
-        filters: obj?.filters ? JSON.parse(obj?.filters) : null,
-    }));
+    const reports = response?.reports?.nodes;
 
     await db.connect();
     await Promise.allSettled(reports?.map(report => new Promise(async (res) => {
@@ -51,6 +49,6 @@ export const getReports = async ({ request, reply }) => {
     return {
         status: 'success',
         result: reports,
-        total: response?.reports?.totalCount,
+        total: response?.reports?.totalCount?.count,
     };
 }

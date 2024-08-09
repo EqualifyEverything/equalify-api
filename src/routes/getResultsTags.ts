@@ -1,4 +1,4 @@
-import { graphqlQuery, db } from '#src/utils';
+import { db, hasuraQuery } from '#src/utils';
 
 export const getResultsTags = async ({ request, reply }) => {
     await db.connect();
@@ -14,28 +14,29 @@ export const getResultsTags = async ({ request, reply }) => {
     })).rows;
     await db.clean();
 
-    const response = await graphqlQuery({
-        query: `query($urlIds: [UUID!], $tagId: UUID!){
-            nodes: enodes(filter: { urlId: { in: $urlIds } }) {
+    const response = await hasuraQuery({
+        request,
+        query: `query($urlIds: [uuid!], $tagId: uuid!){
+            nodes: enodes(where: { url_id: { _in: $urlIds } }) {
                 nodeId: id
-                createdAt
+                createdAt: created_at
                 html
                 targets
-                relatedUrlId: urlId
+                relatedUrlId: url_id
                 equalified
-                messageNodes {
+                messageNodes: message_nodes {
                     id
                     node: enode {equalified}
                     message {
                         id
                         message
-                        messageTags {
+                        messageTags: message_tags {
                             tag {id tag}
                         }
                     }
                 }
             }
-            tag(id: $tagId) {id tag}
+            tag: tags_by_pk(id: $tagId) {id tag}
         }`,
         variables: { urlIds: urls.map(obj => obj.id), tagId: request.query.tagId },
     });

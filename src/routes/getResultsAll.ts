@@ -1,4 +1,4 @@
-import { graphqlQuery, db, hasuraQuery } from '#src/utils';
+import { db, hasuraQuery } from '#src/utils';
 
 export const getResultsAll = async ({ request, reply }) => {
     /*
@@ -64,7 +64,6 @@ export const getResultsAll = async ({ request, reply }) => {
         },
     });
     const filteredNodes = response?.nodes ?? [];
-    console.log(JSON.stringify({ filteredNodes }));
 
     const formattedMessages = {};
     for (const message of filteredNodes.map(obj => obj.messageNodes).flat()) {

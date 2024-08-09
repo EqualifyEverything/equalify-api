@@ -1,17 +1,18 @@
-import { graphqlQuery } from '#src/utils';
+import { hasuraQuery } from '#src/utils';
 
 export const getScans = async ({ request, reply }) => {
-    const response = (await graphqlQuery({
-        query: `query($first: Int, $offset: Int){
-            scans: scansConnection(first: $first, offset: $offset, orderBy: CREATED_AT_DESC, ${(request.query.scanIds) ? `filter: { id: {in: [
+    const response = await hasuraQuery({
+        request,
+        query: `query($limit: Int, $offset: Int){
+            scans: scans_aggregate(limit: $limit, offset: $offset, order_by: {created_at: asc}, ${(request.query.scanIds) ? `where: { id: {_in: [
                         ${request.query.scanIds.split(',').map(obj => `"${obj}"`).join()}
                     ]}}` : ''}
                 ) { 
                 nodes {
                     id
-                    createdAt
+                    createdAt: created_at
                     processing
-                    jobId
+                    jobId: job_id
                     results
                     property {
                         id
@@ -22,18 +23,18 @@ export const getScans = async ({ request, reply }) => {
                         url
                     }
                 }
-                totalCount
+                totalCount: aggregate {count}
             }
         }`,
         variables: {
-            first: parseInt(request.query.first ?? 100),
+            limit: parseInt(request.query.limit ?? 100),
             offset: parseInt(request.query.offset ?? 0),
         },
-    }))?.data;
+    });
 
     return {
         status: 'success',
         result: response?.scans?.nodes,
-        total: response?.scans?.totalCount,
+        total: response?.scans?.totalCount?.count,
     };
 }

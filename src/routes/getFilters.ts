@@ -1,7 +1,8 @@
-import { graphqlQuery } from '#src/utils';
+import { hasuraQuery } from '#src/utils';
 
 export const getFilters = async ({ request, reply }) => {
-    const response = (await graphqlQuery({
+    const response = await hasuraQuery({
+        request,
         query: `{
             messages {
                 value: id
@@ -20,7 +21,7 @@ export const getFilters = async ({ request, reply }) => {
                 label: url
             }
         }`
-    }))?.data;
+    });
 
     return {
         status: 'success',

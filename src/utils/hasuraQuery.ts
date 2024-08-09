@@ -2,6 +2,7 @@ import { isStaging } from '.';
 
 export const hasuraQuery = async ({ request, query, variables = {} }) => {
     const Authorization = request?.headers?.authorization;
+    console.log(JSON.stringify({ query, variables }))
     const response = (await (await fetch(`https://graphql.equalify.${isStaging ? 'dev' : 'app'}/v1/graphql`, {
         method: 'POST',
         headers: {

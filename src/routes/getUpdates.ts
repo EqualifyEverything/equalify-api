@@ -1,29 +1,30 @@
-import { graphqlQuery } from '#src/utils';
+import { hasuraQuery } from '#src/utils';
 
 export const getUpdates = async ({ request, reply }) => {
-    const response = (await graphqlQuery({
-        query: `query($first: Int, $offset: Int){
-            updates: updatesConnection(first: $first, offset: $offset, ${(request.query.startDate && request.query.endDate) ? `filter: {
-                created_at: { greaterThan: "${request.query.startDate}" },
-                created_at: { lessThan: "${request.query.endDate}" }
+    const response = await hasuraQuery({
+        request,
+        query: `query($limit: Int, $offset: Int){
+            updates: enode_updates_aggregate(limit: $limit, offset: $offset, ${(request.query.startDate && request.query.endDate) ? `where: {
+                created_at: { _gte: "${request.query.startDate}" },
+                created_at: { _lte: "${request.query.endDate}" }
             }` : ''}
                 ) { 
                 nodes {
                     id
                     created_at
                 }
-                totalCount
+                totalCount: aggregate {count}
             }
         }`,
         variables: {
-            first: parseInt(request.query.first ?? 100),
+            limit: parseInt(request.query.limit ?? 100),
             offset: parseInt(request.query.offset ?? 0),
         },
-    }))?.data;
+    });
 
     return {
         status: 'success',
         result: response?.updates?.nodes,
-        total: response?.updates?.totalCount,
+        total: response?.updates?.totalCount?.count,
     };
 }

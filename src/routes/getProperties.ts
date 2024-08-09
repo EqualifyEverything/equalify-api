@@ -1,43 +1,44 @@
-import { graphqlQuery } from '#src/utils';
+import { hasuraQuery } from '#src/utils';
 
 export const getProperties = async ({ request, reply }) => {
-    const response = (await graphqlQuery({
-        query: `query($first: Int, $offset: Int){
-            properties: propertiesConnection(first: $first, offset: $offset, orderBy: UPDATED_AT_DESC, 
+    const response = await hasuraQuery({
+        request,
+        query: `query($limit: Int, $offset: Int){
+            properties: properties_aggregate(limit: $limit, offset: $offset, order_by: {updated_at: desc}, 
                 ${(request.query.propertyIds || request.query.propertyDiscovery || request.query.propertyUrls) ? `
-                    filter: {
-                        ${request.query.propertyIds ? `id: {in: [
+                    where: {
+                        ${request.query.propertyIds ? `id: {_in: [
                             ${request.query.propertyIds.split(',').map(obj => `"${obj}"`).join()}
                         ]},` : ''}
-                        ${request.query.propertyDiscovery ? `discovery: {equalTo: "${request.query.propertyDiscovery}"},` : ''}
-                        ${request.query.propertyUrls ? `propertyUrl: {in: ${request.query.propertyUrls.split(',').map(obj => `"${obj}"`)}},` : ''}
+                        ${request.query.propertyDiscovery ? `discovery: {_eq: "${request.query.propertyDiscovery}"},` : ''}
+                        ${request.query.propertyUrls ? `property_url: {_in: ${request.query.propertyUrls.split(',').map(obj => `"${obj}"`)}},` : ''}
                     }` : ''}
             ) { 
                 nodes {
                     id
                     name
-                    propertyUrl
-                    lastProcessed
+                    propertyUrl: property_url
+                    lastProcessed: last_processed
                     archived
                     discovery
                     processed
-                    updatedAt
-                    createdAt
+                    updatedAt: updated_at
+                    createdAt: created_at
                 }
-                totalCount
+                totalCount: aggregate {count}
             }
         }`,
         variables: {
-            first: parseInt(request.query.first ?? 100),
+            limit: parseInt(request.query.limit ?? 100),
             offset: parseInt(request.query.offset ?? 0),
         },
-    }))?.data;
+    });
 
     return {
         status: 'success',
         result: response?.properties?.nodes?.map(obj => ({
             ...obj,
         })),
-        total: response?.properties?.totalCount,
+        total: response?.properties?.totalCount?.count,
     };
 }

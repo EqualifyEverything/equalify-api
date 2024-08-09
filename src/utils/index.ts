@@ -1,4 +1,3 @@
-export * from './graphqlQuery'
 export * from './db'
 export * from './openai'
 export * from './validateUuid'

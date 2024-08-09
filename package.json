@@ -8,8 +8,8 @@
   "scripts": {
     "start:prod": "esbuild src/**/*.ts --outdir=dist/local && nodemon --env-file=.env.production dist/local/app.js",
     "start:staging": "esbuild src/**/*.ts --outdir=dist/local && nodemon --env-file=.env.staging dist/local/app.js",
-    "build:prod": "esbuild src/index.ts --bundle --platform=node --outdir=dist/lambda --external:@aws-sdk && cd dist/lambda && zip -r lambda.zip index.js > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf lambda.zip",
-    "build:staging": "esbuild src/index.ts --bundle --platform=node --outdir=dist/lambda --external:@aws-sdk && cd dist/lambda && zip -r lambda.zip index.js > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api-staging --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf dist/lambda/lambda.zip",
+    "build:prod": "esbuild src/index.ts --bundle --minify --platform=node --outdir=dist/lambda --external:@aws-sdk && cd dist/lambda && zip -r lambda.zip index.js > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf lambda.zip",
+    "build:staging": "esbuild src/index.ts --bundle --minify --platform=node --outdir=dist/lambda --external:@aws-sdk && cd dist/lambda && zip -r lambda.zip index.js > /dev/null && aws --profile equalify lambda update-function-code --function-name equalify-api-staging --zip-file \"fileb://lambda.zip\" > /dev/null && rm -rf dist/lambda/lambda.zip",
     "build": "yarn build:staging && yarn build:prod"
   },
   "imports": {
@@ -19,17 +19,12 @@
   "dependencies": {},
   "devDependencies": {
     "@fastify/aws-lambda": "^4.1.0",
-    "@graphile-contrib/pg-simplify-inflector": "^6.1.0",
     "@types/node": "^20.12.7",
     "aws-jwt-verify": "^4.0.1",
     "esbuild": "^0.21.5",
     "fastify": "^4.26.2",
-    "graphql": "^16.8.1",
     "nodemon": "^3.1.0",
     "openai": "^4.36.0",
-    "pg": "^8.11.5",
-    "postgraphile": "^4.13.0",
-    "postgraphile-plugin-connection-filter": "^2.3.0",
     "serverless-postgres": "^2.1.0",
     "string-strip-html": "^13.4.8",
     "uuid": "^10.0.0"

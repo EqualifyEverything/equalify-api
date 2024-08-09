@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import { addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, getApikey, getCharts, getFilters, getProperties, getReports, getResultsAll, getResultsMessages, getResultsSchema, getResultsTags, getResultsUrls, getScans, getUpdates, graphql, help, updateProperties, updateReports } from '#src/routes';
+import { addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, getApikey, getCharts, getFilters, getProperties, getReports, getResultsAll, getResultsMessages, getResultsSchema, getResultsTags, getResultsUrls, getScans, getUpdates, help, updateProperties, updateReports } from '#src/routes';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { db } from './utils';
 export const fastify = Fastify();
@@ -58,7 +58,6 @@ fastify.delete('/delete/properties', {}, async (request, reply) => deletePropert
 fastify.delete('/delete/reports', {}, async (request, reply) => deleteReports({ request, reply }));
 
 // MISC requests
-fastify.post('/graphql', {}, async (request, reply) => graphql({ request, reply }));
 fastify.post('/help', {}, async (request, reply) => help({ request, reply }));
 
 fastify.listen({ port: 3000 }, (err) => {

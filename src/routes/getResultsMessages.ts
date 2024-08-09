@@ -1,4 +1,4 @@
-import { graphqlQuery, db } from '#src/utils';
+import { graphqlQuery, db, hasuraQuery } from '#src/utils';
 
 export const getResultsMessages = async ({ request, reply }) => {
     await db.connect();
@@ -17,15 +17,16 @@ export const getResultsMessages = async ({ request, reply }) => {
     await db.clean();
 
     // Make a request
-    const response = await graphqlQuery({
-        query: `query($urlIds: [UUID!], $messageId: UUID!){
+    const response = await hasuraQuery({
+        request,
+        query: `query($urlIds: [uuid!], $messageId: uuid!){
             nodes: enodes(filter: { urlId: { in: $urlIds } }) {
-                createdAt
+                createdAt: created_at
                 html
-                urlId
+                urlId: url_id
                 equalified
                 url {url}
-                messageNodes {message{id}}
+                messageNodes: message_nodes {message{id}}
             }
             message(id: $messageId) {message}
         }`,
