@@ -4,7 +4,7 @@ export const getScans = async ({ request, reply }) => {
     const response = await graphql({
         request,
         query: `query($limit: Int, $offset: Int){
-            scans: scans_aggregate(limit: $limit, offset: $offset, order_by: {created_at: asc}, ${(request.query.scanIds) ? `where: { id: {_in: [
+            scans: scans_aggregate(limit: $limit, offset: $offset, order_by: {created_at: desc}, ${(request.query.scanIds) ? `where: { id: {_in: [
                         ${request.query.scanIds.split(',').map(obj => `"${obj}"`).join()}
                     ]}}` : ''}
                 ) { 

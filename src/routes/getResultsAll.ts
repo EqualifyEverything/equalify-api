@@ -7,7 +7,7 @@ export const getResultsAll = async ({ request, reply }) => {
     */
     await db.connect();
     const report = (await db.query(`SELECT "id", "name", "filters" FROM "reports" WHERE "id" = $1`, [request.query.reportId])).rows?.[0];
-    const types = ['properties', 'urls', 'messages', 'nodes', 'tags', 'types'];
+    const types = ['properties', 'urls', 'messages', 'nodes', 'tags', 'types', 'status'];
     const filters = Object.fromEntries(types.map(obj => [obj, []]));
     for (const type of types) {
         filters[type] = report.filters.filter(obj => obj.type === type).map(obj => obj.value)
@@ -26,11 +26,17 @@ export const getResultsAll = async ({ request, reply }) => {
             $urlIds: [uuid!],
             ${filters.types.length > 0 ? '$typeIds: [String],' : ''}
             ${filters.messages.length > 0 ? '$messageIds: [uuid],' : ''}
+            ${filters.tags.length > 0 ? '$tagIds: [uuid],' : ''}
+            ${filters.status.length > 0 ? '$equalified: Boolean,' : ''}
         ) {
             nodes: enodes(where: {
                 url_id: {_in: $urlIds},
-                ${filters.types.length > 0 ? `message_nodes: {message: {type: {_in: $typeIds}}},` : ``}
-                ${filters.messages.length > 0 ? `message_nodes: {message: {id: {_in: $messageIds}}},` : ``}
+                ${filters.status.length > 0 ? `equalified: {_eq: $equalified},` : ''}
+                ${filters.types.length > 0 && filters.messages.length > 0 ? `message_nodes: {message: {id: {_in: $messageIds}, type: {_in: $typeIds}}},` : `
+                    ${filters.types.length > 0 ? `message_nodes: {message: {type: {_in: $typeIds}}},` : ``}
+                    ${filters.messages.length > 0 ? `message_nodes: {message: {id: {_in: $messageIds}}},` : ``}
+                    ${filters.tags.length > 0 ? `message_nodes: {message: {message_tags:{tag:{id: {_in: $tagIds}}}}},` : ``}
+                `}
             }) {
                 nodeId: id
                 createdAt: created_at
@@ -38,7 +44,13 @@ export const getResultsAll = async ({ request, reply }) => {
                 targets
                 relatedUrlId: url_id
                 equalified
-                messageNodes: message_nodes {
+                messageNodes: message_nodes(where:{
+                    ${filters.types.length > 0 && filters.messages.length > 0 ? `message: {id: {_in: $messageIds}, type: {_in: $typeIds}},` : `
+                        ${filters.types.length > 0 ? `message: {type: {_in: $typeIds}},` : ``}
+                        ${filters.messages.length > 0 ? `message: {id: {_in: $messageIds}},` : ``}
+                        ${filters.tags.length > 0 ? `message: {message_tags:{tag:{id: {_in: $tagIds}}}},` : ``}
+                    `}
+                }) {
                     id
                     node: enode {
                         equalified
@@ -47,7 +59,9 @@ export const getResultsAll = async ({ request, reply }) => {
                         id
                         message
                         type
-                        messageTags: message_tags {
+                        messageTags: message_tags(where:{
+                            ${filters.tags.length > 0 ? `tag:{id: {_in: $tagIds}},` : ``}
+                        }) {
                             tag {
                                 id
                                 tag
@@ -61,6 +75,8 @@ export const getResultsAll = async ({ request, reply }) => {
             urlIds: urls.map(obj => obj.id),
             ...filters.types.length > 0 && ({ typeIds: filters.types }),
             ...filters.messages.length > 0 && ({ messageIds: filters.messages }),
+            ...filters.tags.length > 0 && ({ tagIds: filters.tags }),
+            ...filters.status.length > 0 && ({ equalified: filters.status?.[0] === 'active' ? false : true }),
         },
     });
     const filteredNodes = response?.nodes ?? [];
