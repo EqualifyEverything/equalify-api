@@ -52,16 +52,28 @@ const scanProcessor = async ({ result, scan }) => {
                 })).rows?.[0]?.id;
         }
         for (const row of result.nodes) {
-            row.id =
+            const existingId = (await db.query({
+                text: `SELECT "id" FROM "enodes" WHERE "user_id"=$1 AND "html"=$2 AND "targets"=$3 AND "url_id"=$4`,
+                values: [scan.user_id, row.html, JSON.stringify(row.targets), row.url_id],
+            })).rows?.[0]?.id;
+
+            row.id = existingId ??
                 (await db.query({
-                    text: `SELECT "id" FROM "enodes" WHERE "user_id"=$1 AND "html"=$2 AND "targets"=$3 AND "url_id"=$4`,
-                    values: [scan.user_id, row.html, JSON.stringify(row.targets), row.url_id],
-                })).rows?.[0]?.id
-                ??
-                (await db.query({
-                    text: `INSERT INTO "enodes" ("user_id", "html", "targets", "url_id") VALUES ($1, $2, $3, $4) RETURNING "id"`,
-                    values: [scan.user_id, row.html, JSON.stringify(row.targets), result.urls.find(obj => obj.urlId === row.relatedUrlId).id],
+                    text: `INSERT INTO "enodes" ("user_id", "html", "targets", "url_id", "equalified") VALUES ($1, $2, $3, $4, $5) RETURNING "id"`,
+                    values: [scan.user_id, row.html, JSON.stringify(row.targets), result.urls.find(obj => obj.urlId === row.relatedUrlId).id, false],
                 })).rows?.[0]?.id;
+
+            await db.query({
+                text: `INSERT INTO "enode_updates" ("user_id", "enode_id", "equalified") VALUES ($1, $2, $3)`,
+                values: [scan.user_id, row.id, false],
+            });
+
+            if (existingId) {
+                await db.query({
+                    text: `UPDATE "enodes" SET "equalified"=$1 WHERE "id"=$2`,
+                    values: [row.id, false],
+                });
+            }
         }
         for (const row of result.tags) {
             row.id =
@@ -100,9 +112,28 @@ const scanProcessor = async ({ result, scan }) => {
                 })
             }
         }
+
+        // Set node equalified to true for previous nodes associated w/ this scan!
+        const allPropertyUrls = (await db.query({
+            text: `SELECT "id" FROM "urls" WHERE "user_id"=$1 AND "property_id"=$2`,
+            values: [scan.user_id, scan.property_id],
+        })).rows;
+        const equalifiedNodes = (await db.query({
+            text: `SELECT "id" FROM "enodes" WHERE "equalified"=$1 AND "user_id"=$2 AND "url_id" = ANY($3) AND "id" != ANY($4)`,
+            values: [false, scan.user_id, allPropertyUrls.map(obj => obj.id), result.nodes.map(obj => obj.id)],
+        })).rows;
+
+        for (const equalifiedNode of equalifiedNodes) {
+            await db.query({
+                text: `INSERT INTO "enode_updates" ("user_id", "enode_id", "equalified") VALUES ($1, $2, $3)`,
+                values: [scan.user_id, equalifiedNode.id, true],
+            });
+            await db.query({
+                text: `UPDATE "enodes" SET "equalified"=$1 WHERE "id"=$2`,
+                values: [equalifiedNode.id, true],
+            });
+        }
     }
 
-    // 4. Delete the scan and move on!
-    // await db.query(`DELETE FROM "scans" WHERE "id"=$1`, [scan.id]);
     return;
 }

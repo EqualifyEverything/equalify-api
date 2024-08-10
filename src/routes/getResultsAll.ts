@@ -1,4 +1,4 @@
-import { db, graphql } from '#src/utils';
+import { db, getMode, graphql } from '#src/utils';
 
 export const getResultsAll = async ({ request, reply }) => {
     /*
@@ -44,6 +44,7 @@ export const getResultsAll = async ({ request, reply }) => {
                 targets
                 relatedUrlId: url_id
                 equalified
+                enodeUpdates: enode_updates { createdAt: created_at equalified }
                 messageNodes: message_nodes(where:{
                     ${filters.types.length > 0 && filters.messages.length > 0 ? `message: {id: {_in: $messageIds}, type: {_in: $typeIds}},` : `
                         ${filters.types.length > 0 ? `message: {type: {_in: $typeIds}},` : ``}
@@ -111,18 +112,29 @@ export const getResultsAll = async ({ request, reply }) => {
 
     const formattedChart = {};
     for (const node of filteredNodes) {
-        const date = node.createdAt.split('T')[0];
-        if (!formattedChart?.[date]) {
-            formattedChart[date] = {
-                date: date,
-                equalified: 0,
-                active: 0,
-            };
+        for (const nodeUpdate of node.enodeUpdates) {
+            const date = nodeUpdate.createdAt.split('T')[0];
+            if (!formattedChart?.[date]) {
+                formattedChart[date] = {
+                    date: date,
+                    equalified: 0,
+                    active: 0,
+                };
+            }
+            formattedChart[date][nodeUpdate.equalified ? 'equalified' : 'active'] += 1;
         }
-        formattedChart[date][node.equalified ? 'equalified' : 'active'] += 1;
     }
 
     const nodeUrlIds = [...new Set(filteredNodes.map(obj => obj.relatedUrlId))];
+
+    const stats = {
+        activeIssues: Object.values(formattedMessages).length,
+        mostCommonIssue: getMode(Object.values(formattedMessages).map(obj => obj.message)),
+    };
+    await db.query({
+        text: `UPDATE "reports" SET "stats"=$1 WHERE "id"=$2`,
+        values: [stats, request.query.reportId],
+    });
 
     return {
         reportName: report.name,
