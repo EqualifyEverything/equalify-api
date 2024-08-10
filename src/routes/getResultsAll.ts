@@ -32,11 +32,11 @@ export const getResultsAll = async ({ request, reply }) => {
             nodes: enodes(where: {
                 url_id: {_in: $urlIds},
                 ${filters.status.length > 0 ? `equalified: {_eq: $equalified},` : ''}
-                ${filters.types.length > 0 && filters.messages.length > 0 ? `message_nodes: {message: {id: {_in: $messageIds}, type: {_in: $typeIds}}},` : `
-                    ${filters.types.length > 0 ? `message_nodes: {message: {type: {_in: $typeIds}}},` : ``}
-                    ${filters.messages.length > 0 ? `message_nodes: {message: {id: {_in: $messageIds}}},` : ``}
-                    ${filters.tags.length > 0 ? `message_nodes: {message: {message_tags:{tag:{id: {_in: $tagIds}}}}},` : ``}
-                `}
+                ${filters.types.length > 0 || filters.messages.length > 0 || filters.tags.length > 0 ? `message_nodes: {message: {` : ``}
+                    ${filters.types.length > 0 ? `type: {_in: $typeIds},` : ``}
+                    ${filters.messages.length > 0 ? `id: {_in: $messageIds},` : ``}
+                    ${filters.tags.length > 0 ? `message_tags:{tag:{id: {_in: $tagIds}}},` : ``}
+                ${filters.types.length > 0 || filters.messages.length > 0 || filters.tags.length > 0 ? `}}` : ``}
             }) {
                 nodeId: id
                 createdAt: created_at
@@ -46,11 +46,11 @@ export const getResultsAll = async ({ request, reply }) => {
                 equalified
                 enodeUpdates: enode_updates { createdAt: created_at equalified }
                 messageNodes: message_nodes(where:{
-                    ${filters.types.length > 0 && filters.messages.length > 0 ? `message: {id: {_in: $messageIds}, type: {_in: $typeIds}},` : `
-                        ${filters.types.length > 0 ? `message: {type: {_in: $typeIds}},` : ``}
-                        ${filters.messages.length > 0 ? `message: {id: {_in: $messageIds}},` : ``}
-                        ${filters.tags.length > 0 ? `message: {message_tags:{tag:{id: {_in: $tagIds}}}},` : ``}
-                    `}
+                    ${filters.types.length > 0 || filters.messages.length > 0 || filters.tags.length > 0 ? `message: {` : ``}
+                        ${filters.types.length > 0 ? `type: {_in: $typeIds},` : ``}
+                        ${filters.messages.length > 0 ? `id: {_in: $messageIds},` : ``}
+                        ${filters.tags.length > 0 ? `message_tags:{tag:{id: {_in: $tagIds}}},` : ``}
+                    ${filters.types.length > 0 || filters.messages.length > 0 || filters.tags.length > 0 ? `}` : ``}
                 }) {
                     id
                     node: enode {
