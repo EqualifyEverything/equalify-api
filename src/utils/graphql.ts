@@ -10,7 +10,7 @@ export const graphql = async ({ request, query, variables = {} }) => {
         ...userId && ({ 'x-hasura-user-id': userId }),
         ...role && ({ 'x-hasura-role': role }),
     };
-    console.log(JSON.stringify({ query, variables, headers }))
+    // console.log(JSON.stringify({ query, variables, headers }))
     const response = (await (await fetch(`https://graphql.equalify.${isStaging ? 'dev' : 'app'}/v1/graphql`, {
         method: 'POST',
         headers,

@@ -1,5 +1,7 @@
 import { jwtClaims } from '#src/app';
-import { db, validateUrl } from '#src/utils';
+import { db, isStaging, validateUrl } from '#src/utils';
+import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
+const lambda = new LambdaClient();
 
 export const addScans = async ({ request, reply }) => {
     if (!(request.body.propertyIds || request.body.urlIds)) {
@@ -11,6 +13,7 @@ export const addScans = async ({ request, reply }) => {
 
     await db.connect();
     for (const propertyId of request.body.propertyIds ?? []) {
+        const scans = [];
         const property = (await db.query(`SELECT "id", "discovery", "property_url" FROM "properties" WHERE "id"=$1`, [propertyId])).rows?.[0];
         if (!property.discovery) {
             return {
@@ -47,16 +50,26 @@ export const addScans = async ({ request, reply }) => {
                         values: [jwtClaims.sub, url, propertyId]
                     })).rows?.[0]?.id;
 
-                    await db.query({
-                        text: `INSERT INTO "scans" ("user_id", "property_id", "url_id", "job_id") VALUES ($1, $2, $3, $4) RETURNING "id"`,
+                    const scan = (await db.query({
+                        text: `INSERT INTO "scans" ("user_id", "property_id", "url_id", "job_id") VALUES ($1, $2, $3, $4) RETURNING "id", "job_id", "property_id", "user_id"`,
                         values: [jwtClaims.sub, propertyId, urlId, parseInt(jobId)]
-                    });
+                    })).rows[0];
+                    scans.push(scan);
                 }
             }
         }
         catch (err) {
             console.log(err);
         }
+
+        lambda.send(new InvokeCommand({
+            FunctionName: `equalify-api${isStaging ? '-staging' : ''}`,
+            InvocationType: "Event",
+            Payload: Buffer.from(JSON.stringify({
+                path: '/internal/processScans',
+                scans: scans
+            })),
+        }));
     }
     await db.clean();
 
