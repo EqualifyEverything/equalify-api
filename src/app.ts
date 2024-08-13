@@ -16,6 +16,8 @@ fastify.addHook('preHandler', async (request, reply) => {
             await db.connect();
             const userId = (await db.query(`SELECT "id" FROM "users" WHERE "apikey"=$1`, [request.headers.apikey])).rows[0].id;
             await db.clean();
+            request.headers['x-hasura-user-id'] = userId;
+            request.headers['x-hasura-role'] = 'user';
             jwtClaims.sub = userId;
         }
         else {
