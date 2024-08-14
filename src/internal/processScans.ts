@@ -6,7 +6,7 @@ export const processScans = async (event) => {
     const scans = event.scans;
     const allNodeIds = [];
     const pollScans = (givenScans) => new Promise(async (finalRes) => {
-        await sleep(1000);
+        await sleep(2500);
         const remainingScans = [];
         await Promise.allSettled(givenScans.map(scan => new Promise(async (res) => {
             try {
@@ -81,10 +81,7 @@ export const processScans = async (event) => {
 }
 
 const scanProcessor = async ({ result, scan }) => {
-    // 1. Set processing to FALSE to prevent API from accidentally re-processing the same scan
-    await db.query(`UPDATE "scans" SET "processing"=FALSE, "results"=$1`, [result]);
-
-    // 2. Find existing IDs for urls, messages, tags, & nodes (or create them)
+    // Find existing IDs for urls, messages, tags, & nodes (or create them)
     if (result.nodes.length > 0) {
         for (const row of result.urls) {
             row.id =
@@ -147,31 +144,36 @@ const scanProcessor = async ({ result, scan }) => {
                 })).rows?.[0]?.id;
         }
         for (const row of result.messages) {
-            row.id =
-                (await db.query({
-                    text: `SELECT "id" FROM "messages" WHERE "user_id"=$1 AND "message"=$2 AND "type"=$3`,
-                    values: [scan.user_id, row.message, row.type],
-                })).rows?.[0]?.id
-                ??
+            const existingMessageId = (await db.query({
+                text: `SELECT "id" FROM "messages" WHERE "user_id"=$1 AND "message"=$2 AND "type"=$3`,
+                values: [scan.user_id, row.message, row.type],
+            })).rows?.[0]?.id;
+            row.id = existingMessageId ??
                 (await db.query({
                     text: `INSERT INTO "messages" ("user_id", "message", "type") VALUES ($1, $2, $3) RETURNING "id"`,
                     values: [scan.user_id, row.message, row.type],
                 })).rows?.[0]?.id;
 
-            for (const relatedNodeId of row.relatedNodeIds) {
-                await db.query({
-                    text: `INSERT INTO "message_nodes" ("user_id", "message_id", "enode_id") VALUES ($1, $2, $3)`,
-                    values: [scan.user_id, row.id, result.nodes.find(obj => obj.nodeId === relatedNodeId).id]
-                })
-            }
-            for (const relatedTagId of row.relatedTagIds) {
-                await db.query({
-                    text: `INSERT INTO "message_tags" ("user_id", "message_id", "tag_id") VALUES ($1, $2, $3)`,
-                    values: [scan.user_id, row.id, result.tags.find(obj => obj.tagId === relatedTagId).id]
-                })
+            if (!existingMessageId) {
+                for (const relatedNodeId of row.relatedNodeIds) {
+                    await db.query({
+                        text: `INSERT INTO "message_nodes" ("user_id", "message_id", "enode_id") VALUES ($1, $2, $3)`,
+                        values: [scan.user_id, row.id, result.nodes.find(obj => obj.nodeId === relatedNodeId).id]
+                    })
+                }
+                for (const relatedTagId of row.relatedTagIds) {
+                    await db.query({
+                        text: `INSERT INTO "message_tags" ("user_id", "message_id", "tag_id") VALUES ($1, $2, $3)`,
+                        values: [scan.user_id, row.id, result.tags.find(obj => obj.tagId === relatedTagId).id]
+                    })
+                }
             }
         }
     }
+    await db.query({
+        text: `UPDATE "scans" SET "processing"=FALSE, "results"=$1`,
+        values: [result],
+    });
 
     return result.nodes;
 }
