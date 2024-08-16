@@ -171,8 +171,8 @@ const scanProcessor = async ({ result, scan }) => {
         }
     }
     await db.query({
-        text: `UPDATE "scans" SET "processing"=FALSE, "results"=$1`,
-        values: [result],
+        text: `UPDATE "scans" SET "processing"=FALSE, "results"=$1 WHERE "id"=$2`,
+        values: [result, scan.id],
     });
 
     return result.nodes;
