@@ -98,13 +98,13 @@ const scanProcessor = async ({ result, scan }) => {
         for (const row of result.nodes) {
             const existingId = (await db.query({
                 text: `SELECT "id" FROM "enodes" WHERE "user_id"=$1 AND "html"=$2 AND "targets"=$3 AND "url_id"=$4`,
-                values: [scan.user_id, row.html, JSON.stringify(row.targets), result.urls.find(obj => obj.urlId === row.relatedUrlId).id],
+                values: [scan.user_id, row.html, JSON.stringify(row.targets), result.urls.find(obj => obj.urlId === row.relatedUrlId)?.id],
             })).rows?.[0]?.id;
 
             row.id = existingId ??
                 (await db.query({
                     text: `INSERT INTO "enodes" ("user_id", "html", "targets", "url_id", "equalified") VALUES ($1, $2, $3, $4, $5) RETURNING "id"`,
-                    values: [scan.user_id, row.html, JSON.stringify(row.targets), result.urls.find(obj => obj.urlId === row.relatedUrlId).id, false],
+                    values: [scan.user_id, row.html, JSON.stringify(row.targets), result.urls.find(obj => obj.urlId === row.relatedUrlId)?.id, false],
                 })).rows?.[0]?.id;
 
             const existingNodeUpdateId = (await db.query({
@@ -144,28 +144,55 @@ const scanProcessor = async ({ result, scan }) => {
                 })).rows?.[0]?.id;
         }
         for (const row of result.messages) {
-            const existingMessageId = (await db.query({
+            const existingId = (await db.query({
                 text: `SELECT "id" FROM "messages" WHERE "user_id"=$1 AND "message"=$2 AND "type"=$3`,
                 values: [scan.user_id, row.message, row.type],
             })).rows?.[0]?.id;
-            row.id = existingMessageId ??
+            row.id = existingId ??
                 (await db.query({
                     text: `INSERT INTO "messages" ("user_id", "message", "type") VALUES ($1, $2, $3) RETURNING "id"`,
                     values: [scan.user_id, row.message, row.type],
                 })).rows?.[0]?.id;
 
-            if (!existingMessageId) {
-                for (const relatedNodeId of row.relatedNodeIds) {
-                    await db.query({
-                        text: `INSERT INTO "message_nodes" ("user_id", "message_id", "enode_id") VALUES ($1, $2, $3)`,
-                        values: [scan.user_id, row.id, result.nodes.find(obj => obj.nodeId === relatedNodeId).id]
-                    })
+            for (const relatedNodeId of row.relatedNodeIds) {
+                try {
+                    const messsageNodeExists = (await db.query({
+                        text: `SELECT "id" FROM "message_nodes" WHERE "user_id"=$1 AND "message_id"=$2 AND "enode_id"=$3`,
+                        values: [scan.user_id, existingId, result.nodes.find(obj => obj.nodeId === relatedNodeId)?.id],
+                    })).rows?.[0]?.id;
+                    if (!messsageNodeExists) {
+                        await db.query({
+                            text: `INSERT INTO "message_nodes" ("user_id", "message_id", "enode_id") VALUES ($1, $2, $3)`,
+                            values: [scan.user_id, existingId, result.nodes.find(obj => obj.nodeId === relatedNodeId)?.id]
+                        })
+                    }
                 }
-                for (const relatedTagId of row.relatedTagIds) {
-                    await db.query({
-                        text: `INSERT INTO "message_tags" ("user_id", "message_id", "tag_id") VALUES ($1, $2, $3)`,
-                        values: [scan.user_id, row.id, result.tags.find(obj => obj.tagId === relatedTagId).id]
-                    })
+                catch (err) {
+                    console.log(err);
+                    console.log(`messageNode error`);
+                    console.log(JSON.stringify({ row }));
+                    return;
+                }
+            }
+
+            for (const relatedTagId of row.relatedTagIds) {
+                try {
+                    const messageTagExists = (await db.query({
+                        text: `SELECT "id" FROM "message_tags" WHERE "user_id"=$1 AND "message_id"=$2 AND "tag_id"=$3`,
+                        values: [scan.user_id, existingId, result.nodes.find(obj => obj.nodeId === relatedTagId)?.id],
+                    })).rows?.[0]?.id;
+                    if (!messageTagExists) {
+                        await db.query({
+                            text: `INSERT INTO "message_tags" ("user_id", "message_id", "tag_id") VALUES ($1, $2, $3)`,
+                            values: [scan.user_id, existingId, result.tags.find(obj => obj.tagId === relatedTagId)?.id]
+                        })
+                    }
+                }
+                catch (err) {
+                    console.log(err);
+                    console.log(`messageTag error`);
+                    console.log(JSON.stringify({ row }));
+                    return;
                 }
             }
         }
