@@ -144,11 +144,10 @@ const scanProcessor = async ({ result, scan }) => {
                 })).rows?.[0]?.id;
         }
         for (const row of result.messages) {
-            const existingId = (await db.query({
+            row.id = (await db.query({
                 text: `SELECT "id" FROM "messages" WHERE "user_id"=$1 AND "message"=$2 AND "type"=$3`,
                 values: [scan.user_id, row.message, row.type],
-            })).rows?.[0]?.id;
-            row.id = existingId ??
+            })).rows?.[0]?.id ??
                 (await db.query({
                     text: `INSERT INTO "messages" ("user_id", "message", "type") VALUES ($1, $2, $3) RETURNING "id"`,
                     values: [scan.user_id, row.message, row.type],
@@ -158,20 +157,17 @@ const scanProcessor = async ({ result, scan }) => {
                 try {
                     const messsageNodeExists = (await db.query({
                         text: `SELECT "id" FROM "message_nodes" WHERE "user_id"=$1 AND "message_id"=$2 AND "enode_id"=$3`,
-                        values: [scan.user_id, existingId, result.nodes.find(obj => obj.nodeId === relatedNodeId)?.id],
+                        values: [scan.user_id, row.id, result.nodes.find(obj => obj.nodeId === relatedNodeId)?.id],
                     })).rows?.[0]?.id;
                     if (!messsageNodeExists) {
                         await db.query({
                             text: `INSERT INTO "message_nodes" ("user_id", "message_id", "enode_id") VALUES ($1, $2, $3)`,
-                            values: [scan.user_id, existingId, result.nodes.find(obj => obj.nodeId === relatedNodeId)?.id]
+                            values: [scan.user_id, row.id, result.nodes.find(obj => obj.nodeId === relatedNodeId)?.id]
                         })
                     }
                 }
                 catch (err) {
-                    console.log(err);
-                    console.log(`messageNode error`);
-                    console.log(JSON.stringify({ row }));
-                    return;
+                    console.log(err, `messageNode error`, JSON.stringify({ row }));
                 }
             }
 
@@ -179,20 +175,17 @@ const scanProcessor = async ({ result, scan }) => {
                 try {
                     const messageTagExists = (await db.query({
                         text: `SELECT "id" FROM "message_tags" WHERE "user_id"=$1 AND "message_id"=$2 AND "tag_id"=$3`,
-                        values: [scan.user_id, existingId, result.nodes.find(obj => obj.nodeId === relatedTagId)?.id],
+                        values: [scan.user_id, row.id, result.nodes.find(obj => obj.nodeId === relatedTagId)?.id],
                     })).rows?.[0]?.id;
                     if (!messageTagExists) {
                         await db.query({
                             text: `INSERT INTO "message_tags" ("user_id", "message_id", "tag_id") VALUES ($1, $2, $3)`,
-                            values: [scan.user_id, existingId, result.tags.find(obj => obj.tagId === relatedTagId)?.id]
+                            values: [scan.user_id, row.id, result.tags.find(obj => obj.tagId === relatedTagId)?.id]
                         })
                     }
                 }
                 catch (err) {
-                    console.log(err);
-                    console.log(`messageTag error`);
-                    console.log(JSON.stringify({ row }));
-                    return;
+                    console.log(err, `messageTag error`, JSON.stringify({ row }));
                 }
             }
         }

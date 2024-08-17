@@ -6,7 +6,7 @@ export const getResultsAll = async ({ request, reply }) => {
     Messages, Tags, Properties, Pages are sorted by properties related to the most nodes w/ nodeEqualified set to false (most to least)
     */
     await db.connect();
-    const report = (await db.query(`SELECT "id", "name", "filters" FROM "reports" WHERE "id" = $1`, [request.query.reportId])).rows?.[0];
+    const report = (await db.query(`SELECT "id", "name", "filters" FROM "reports" WHERE "id" = $1`, [request.query.reportId])).rows[0];
     const types = ['properties', 'urls', 'messages', 'nodes', 'tags', 'types', 'status'];
     const filters = Object.fromEntries(types.map(obj => [obj, []]));
     for (const type of types) {
@@ -77,14 +77,14 @@ export const getResultsAll = async ({ request, reply }) => {
             ...filters.types.length > 0 && ({ typeIds: filters.types }),
             ...filters.messages.length > 0 && ({ messageIds: filters.messages }),
             ...filters.tags.length > 0 && ({ tagIds: filters.tags }),
-            ...filters.status.length > 0 && ({ equalified: filters.status?.[0] === 'active' ? false : true }),
+            ...filters.status.length > 0 && ({ equalified: filters.status[0] === 'active' ? false : true }),
         },
     });
-    const filteredNodes = response?.nodes ?? [];
+    const filteredNodes = response.nodes ?? [];
 
     const formattedMessages = {};
     for (const message of filteredNodes.map(obj => obj.messageNodes).flat()) {
-        if (!formattedMessages?.[message.message.id]) {
+        if (!formattedMessages[message.message.id]) {
             formattedMessages[message.message.id] = {
                 id: message.message.id,
                 message: message.message.message,
@@ -102,7 +102,7 @@ export const getResultsAll = async ({ request, reply }) => {
         .map(obj => obj.message.messageTags).flat()
         .map(obj => obj.tag)
     ) {
-        if (!formattedTags?.[tag.tag]) {
+        if (!formattedTags[tag.tag]) {
             formattedTags[tag.tag] = {
                 id: tag.id,
                 tag: tag.tag,
@@ -114,7 +114,7 @@ export const getResultsAll = async ({ request, reply }) => {
     for (const node of filteredNodes) {
         for (const nodeUpdate of node.enodeUpdates) {
             const date = nodeUpdate.createdAt.split('T')[0];
-            if (!formattedChart?.[date]) {
+            if (!formattedChart[date]) {
                 formattedChart[date] = {
                     date: date,
                     equalified: 0,
