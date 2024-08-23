@@ -13,7 +13,7 @@ export const addScans = async ({ request, reply }) => {
 
     await db.connect();
     for (const propertyId of request.body.propertyIds ?? []) {
-        const scans = [];
+        const jobIds = [];
         const property = (await db.query(`SELECT "id", "discovery", "property_url" FROM "properties" WHERE "id"=$1`, [propertyId])).rows?.[0];
         if (!property.discovery) {
             return {
@@ -39,7 +39,7 @@ export const addScans = async ({ request, reply }) => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url: property.property_url })
                 })).json();
-                console.log(JSON.stringify({ scanResponse }));
+                // console.log(JSON.stringify({ scanResponse }));
 
                 for (const { jobId, url } of scanResponse?.jobs ?? []) {
                     const urlId = (await db.query({
@@ -51,10 +51,10 @@ export const addScans = async ({ request, reply }) => {
                     })).rows?.[0]?.id;
 
                     const scan = (await db.query({
-                        text: `INSERT INTO "scans" ("user_id", "property_id", "url_id", "job_id") VALUES ($1, $2, $3, $4) RETURNING "id", "job_id", "property_id", "user_id"`,
+                        text: `INSERT INTO "scans" ("user_id", "property_id", "url_id", "job_id") VALUES ($1, $2, $3, $4) RETURNING "job_id"`,
                         values: [jwtClaims.sub, propertyId, urlId, parseInt(jobId)]
                     })).rows[0];
-                    scans.push(scan);
+                    jobIds.push(scan.job_id);
                 }
             }
         }
@@ -67,7 +67,9 @@ export const addScans = async ({ request, reply }) => {
             InvocationType: "Event",
             Payload: Buffer.from(JSON.stringify({
                 path: '/internal/processScans',
-                scans: scans
+                jobIds: jobIds,
+                userId: jwtClaims.sub,
+                propertyId: propertyId,
             })),
         }));
     }

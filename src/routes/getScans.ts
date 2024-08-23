@@ -27,7 +27,7 @@ export const getScans = async ({ request, reply }) => {
             }
         }`,
         variables: {
-            limit: parseInt(request.query.limit ?? 100),
+            limit: parseInt(request.query.limit ?? 5000),
             offset: parseInt(request.query.offset ?? 0),
         },
     });
