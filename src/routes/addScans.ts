@@ -70,6 +70,7 @@ export const addScans = async ({ request, reply }) => {
                 jobIds: jobIds,
                 userId: jwtClaims.sub,
                 propertyId: propertyId,
+                lambdaRun: 1,
             })),
         }));
     }

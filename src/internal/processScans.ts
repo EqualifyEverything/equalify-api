@@ -1,19 +1,21 @@
-import { chunk, db, sleep } from '#src/utils';
+import { chunk, db, isStaging, sleep } from '#src/utils';
+import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
+const lambda = new LambdaClient();
 
 export const processScans = async (event) => {
     console.log(`START PROCESS SCANS`);
+    const startTime = new Date().getTime();
     await db.connect();
-    const { jobIds, userId, propertyId } = event;
+    const { jobIds, userId, propertyId, lambdaRun } = event;
     const allNodeIds = [];
     const pollScans = (givenJobIds) => new Promise(async (finalRes) => {
         await sleep(2500);
         const remainingScans = [];
         const batchesOfJobIds = chunk(givenJobIds, 100);
         for (const [index, batchOfJobIds] of batchesOfJobIds.entries()) {
-            console.log(`Start batch ${index + 1} of ${batchesOfJobIds.length}`);
             await Promise.allSettled(batchOfJobIds.map(jobId => new Promise(async (res) => {
                 try {
-                    const scanResults = await fetch(`https://scan.equalify.app/results/${jobId}`, { signal: AbortSignal.timeout(250) });
+                    const scanResults = await fetch(`https://scan.equalify.app/results/${jobId}`, { signal: AbortSignal.timeout(500) });
                     const { result, status } = await scanResults.json();
                     if (['delayed', 'active', 'waiting'].includes(status)) {
                         remainingScans.push(jobId);
@@ -27,20 +29,54 @@ export const processScans = async (event) => {
                     }
                 }
                 catch (err) {
+                    // console.log(err);
                     remainingScans.push(jobId);
                 }
                 res(1);
             })));
-            console.log(`End batch ${index + 1} of ${batchesOfJobIds.length}`);
         }
-        console.log(JSON.stringify({ remainingScans: remainingScans.length }));
+        const stats = { userId, lambdaRun, remainingScans: remainingScans.length };
+        console.log(JSON.stringify(stats));
         if (remainingScans.length > 0) {
-            await pollScans(remainingScans);
+            const currentTime = new Date().getTime();
+            const deltaTime = currentTime - startTime;
+            const twoMinutes = 2 * 60 * 1000;
+            if (deltaTime <= twoMinutes) {
+                await pollScans(remainingScans);
+            }
+            else if (deltaTime > twoMinutes) {
+                const scansExist = (await db.query({
+                    text: `SELECT "id" FROM "scans" WHERE "job_id" = ANY($1) LIMIT 1`,
+                    values: [jobIds],
+                })).rows?.[0]?.id;
+                if (lambdaRun < 750 && scansExist) {
+                    console.log(JSON.stringify({ message: `Terminating processScans early, invoking Lambda again.`, ...stats }));
+                    lambda.send(new InvokeCommand({
+                        FunctionName: `equalify-api${isStaging ? '-staging' : ''}`,
+                        InvocationType: "Event",
+                        Payload: Buffer.from(JSON.stringify({
+                            path: '/internal/processScans',
+                            jobIds: remainingScans,
+                            userId: userId,
+                            propertyId: propertyId,
+                            lambdaRun: lambdaRun + 1,
+                        })),
+                    }));
+                    return;
+                }
+                else if (!scansExist) {
+                    console.log(JSON.stringify({ message: `Scans were deleted, ending Lambda loop.`, ...stats }));
+                    return;
+                }
+                else {
+                    console.log(JSON.stringify({ message: `No more Lambda runs, we've maxed out at ~24 hours.`, ...stats }));
+                    return;
+                }
+            }
         }
         else {
             finalRes(1);
         }
-        console.log(`End Reached`);
     });
     await pollScans(jobIds);
 
