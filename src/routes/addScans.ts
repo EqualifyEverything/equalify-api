@@ -37,7 +37,7 @@ export const addScans = async ({ request, reply }) => {
                 const scanResponse = await (await fetch(`https://scan.equalify.app/generate/${discoveryDict?.[property.discovery] ?? 'url'}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: property.property_url })
+                    body: JSON.stringify({ url: property.property_url, userId: jwtClaims.sub })
                 })).json();
                 // console.log(JSON.stringify({ scanResponse }));
 
