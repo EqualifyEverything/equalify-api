@@ -13,7 +13,7 @@ export const getScans = async ({ request, reply }) => {
                     createdAt: created_at
                     processing
                     jobId: job_id
-                    results
+                    ${request.query.scanIds ? `results` : ``}
                     property {
                         id
                         name
@@ -27,7 +27,7 @@ export const getScans = async ({ request, reply }) => {
             }
         }`,
         variables: {
-            limit: parseInt(request.query.limit ?? 5000),
+            limit: parseInt(request.query.limit ?? 10000),
             offset: parseInt(request.query.offset ?? 0),
         },
     });
