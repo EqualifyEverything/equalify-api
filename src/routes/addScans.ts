@@ -13,7 +13,6 @@ export const addScans = async ({ request, reply }) => {
 
     await db.connect();
     for (const propertyId of request.body.propertyIds ?? []) {
-        const jobIds = [];
         const property = (await db.query(`SELECT "id", "discovery", "property_url" FROM "properties" WHERE "id"=$1`, [propertyId])).rows?.[0];
         if (!property.discovery) {
             return {
@@ -54,25 +53,21 @@ export const addScans = async ({ request, reply }) => {
                         text: `INSERT INTO "scans" ("user_id", "property_id", "url_id", "job_id") VALUES ($1, $2, $3, $4) RETURNING "job_id"`,
                         values: [jwtClaims.sub, propertyId, urlId, parseInt(jobId)]
                     })).rows[0];
-                    jobIds.push(scan.job_id);
                 }
             }
         }
         catch (err) {
             console.log(err);
         }
-
-        lambda.send(new InvokeCommand({
-            FunctionName: `equalify-api${isStaging ? '-staging' : ''}`,
-            InvocationType: "Event",
-            Payload: Buffer.from(JSON.stringify({
-                path: '/internal/processScans',
-                jobIds: jobIds,
-                userId: jwtClaims.sub,
-                propertyId: propertyId,
-                lambdaRun: 1,
-            })),
-        }));
+        // lambda.send(new InvokeCommand({
+        //     FunctionName: `equalify-api${isStaging ? '-staging' : ''}`,
+        //     InvocationType: "Event",
+        //     Payload: Buffer.from(JSON.stringify({
+        //         path: '/internal/processScans',
+        //         userId: jwtClaims.sub,
+        //         propertyId: propertyId,
+        //     })),
+        // }));
     }
     await db.clean();
 
