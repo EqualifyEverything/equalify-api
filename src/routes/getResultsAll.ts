@@ -1,4 +1,5 @@
 import { db, getMode, graphql } from '#src/utils';
+import { gzipSync } from 'zlib';
 
 export const getResultsAll = async ({ request, reply }) => {
     /*
@@ -60,14 +61,16 @@ export const getResultsAll = async ({ request, reply }) => {
                         id
                         message
                         type
-                        messageTags: message_tags(where:{
-                            ${filters.tags.length > 0 ? `tag:{id: {_in: $tagIds}},` : ``}
-                        }) {
-                            tag {
-                                id
-                                tag
+                        ${urls.length < 100 ? `
+                            messageTags: message_tags(where:{
+                                ${filters.tags.length > 0 ? `tag:{id: {_in: $tagIds}},` : ``}
+                            }) {
+                                tag {
+                                    id
+                                    tag
+                                }
                             }
-                        }
+                        ` : ''}
                     }
                 }
             }
@@ -99,7 +102,7 @@ export const getResultsAll = async ({ request, reply }) => {
     const formattedTags = {};
     for (const tag of filteredNodes
         .map(obj => obj.messageNodes).flat()
-        .map(obj => obj.message.messageTags).flat()
+        .map(obj => obj.message?.messageTags ?? []).flat()
         .map(obj => obj.tag)
     ) {
         if (!formattedTags[tag.tag]) {
@@ -136,10 +139,11 @@ export const getResultsAll = async ({ request, reply }) => {
         values: [stats, request.query.reportId],
     });
 
-    return {
+    const arrayLimit = 10000;
+    const body = {
         reportName: report.name,
-        urls: urls.filter(url => nodeUrlIds.includes(url.id)),
-        nodes: filteredNodes.map(obj => ({
+        urls: urls.filter(url => nodeUrlIds.slice(0, arrayLimit).includes(url.id)),
+        nodes: filteredNodes.slice(0, arrayLimit).map(obj => ({
             nodeId: obj.nodeId,
             html: obj.html,
             targets: obj.targets,
@@ -147,13 +151,16 @@ export const getResultsAll = async ({ request, reply }) => {
             equalified: obj.equalified,
         })),
         messages: Object.values(formattedMessages)
-            .sort((a, b) => a.activeCount > b.activeCount ? -1 : 1)
+            .sort((a, b) => a.activeCount > b.activeCount ? -1 : 1).slice(0, arrayLimit)
             .map(obj => ({
                 ...obj,
                 totalCount: obj.equalifiedCount + obj.activeCount,
             })),
         tags: Object.values(formattedTags),
-        chart: Object.values(formattedChart)
+        chart: Object.values(formattedChart).slice(0, arrayLimit)
             .sort((a, b) => a.date > b.date ? -1 : 1),
     };
+    const compressedBody = gzipSync(JSON.stringify(body));
+    reply.headers({ 'content-encoding': 'gzip' });
+    return reply.send(compressedBody)
 }

@@ -13,7 +13,7 @@ export const processScans = async (event) => {
     const pollScans = (givenJobIds) => new Promise(async (finalRes) => {
         await sleep(1000);
         const remainingScans = [];
-        const batchesOfJobIds = chunk(givenJobIds, 100);
+        const batchesOfJobIds = chunk(givenJobIds, 25);
         for (const [index, batchOfJobIds] of batchesOfJobIds.entries()) {
             console.log(`Start ${index} of ${batchesOfJobIds.length} batches`);
             await Promise.allSettled(batchOfJobIds.map(jobId => new Promise(async (res) => {
