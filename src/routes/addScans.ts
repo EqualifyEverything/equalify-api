@@ -33,7 +33,7 @@ export const addScans = async ({ request, reply }) => {
                     sitemap: 'sitemapurl',
                 }
 
-                const scanResponse = await (await fetch(`https://scan.equalify.app/generate/${discoveryDict?.[property.discovery] ?? 'url'}`, {
+                const scanResponse = await (await fetch(`https://scan${isStaging ? '-dev' : ''}.equalify.app/generate/${discoveryDict?.[property.discovery] ?? 'url'}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url: property.property_url, userId: jwtClaims.sub })
