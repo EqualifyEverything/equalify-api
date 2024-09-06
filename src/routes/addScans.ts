@@ -17,7 +17,7 @@ export const addScans = async ({ request, reply }) => {
         if (!property.discovery) {
             return {
                 status: 'error',
-                message: 'One or more of the provided propertyIds is invalid',
+                message: 'You must provide a property discovery attribute, either "single" or "sitemap"',
             }
         }
         try {
@@ -54,20 +54,24 @@ export const addScans = async ({ request, reply }) => {
                         values: [jwtClaims.sub, propertyId, urlId, parseInt(jobId)]
                     })).rows[0];
                 }
+
+                if (property.discovery === 'single') {
+                    lambda.send(new InvokeCommand({
+                        FunctionName: `equalify-api${isStaging ? '-staging' : ''}`,
+                        InvocationType: "Event",
+                        Payload: Buffer.from(JSON.stringify({
+                            path: '/internal/processScans',
+                            userId: jwtClaims.sub,
+                            propertyId: propertyId,
+                            discovery: 'single',
+                        })),
+                    }));
+                }
             }
         }
         catch (err) {
             console.log(err);
         }
-        // lambda.send(new InvokeCommand({
-        //     FunctionName: `equalify-api${isStaging ? '-staging' : ''}`,
-        //     InvocationType: "Event",
-        //     Payload: Buffer.from(JSON.stringify({
-        //         path: '/internal/processScans',
-        //         userId: jwtClaims.sub,
-        //         propertyId: propertyId,
-        //     })),
-        // }));
     }
     await db.clean();
 
