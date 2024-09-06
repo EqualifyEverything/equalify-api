@@ -4,10 +4,10 @@ export const processScans = async (event) => {
     console.log(`START PROCESS SCANS`);
     const startTime = new Date().getTime();
     await db.connect();
-    const { userId, propertyId } = event;
+    const { userId, propertyId, discovery } = event;
     const jobIds = (await db.query({
-        text: `SELECT "job_id" FROM "scans" WHERE "user_id"=$1 AND "property_id"=$2 AND "processing" = TRUE`,
-        values: [userId, propertyId],
+        text: `SELECT s.job_id FROM scans as s INNER JOIN properties AS p ON s.property_id = p.id WHERE s.user_id=$1 AND s.property_id=$2 AND s.processing = TRUE AND p.discovery=$3`,
+        values: [userId, propertyId, discovery],
     })).rows.map(obj => obj.job_id);
     const allNodeIds = [];
     const pollScans = (givenJobIds) => new Promise(async (finalRes) => {

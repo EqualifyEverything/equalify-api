@@ -30,6 +30,7 @@ export const runEveryFifteenMinutes = async () => {
                 path: '/internal/processScans',
                 userId: user_id,
                 propertyId: property_id,
+                discovery: 'sitemap',
             })),
         }));
     }
