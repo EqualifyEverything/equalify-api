@@ -14,6 +14,14 @@ export const addScans = async ({ request, reply }) => {
     await db.connect();
     for (const propertyId of request.body.propertyIds ?? []) {
         const property = (await db.query(`SELECT "id", "discovery", "property_url" FROM "properties" WHERE "id"=$1`, [propertyId])).rows?.[0];
+        const userIsValidated = (await db.query(`SELECT "validated" FROM "users" WHERE "id"=$1`, [jwtClaims.sub])).rows?.[0]?.validated;
+        if (!userIsValidated && property.discovery === 'sitemap') {
+            return {
+                status: 'user_not_validated',
+                message: 'We must validate your account before permitting sitemap scans.',
+            }
+        }
+
         if (!property.discovery) {
             return {
                 status: 'error',
