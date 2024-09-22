@@ -7,7 +7,18 @@ export const getResultsAll = async ({ request, reply }) => {
     Messages, Tags, Properties, Pages are sorted by properties related to the most nodes w/ nodeEqualified set to false (most to least)
     */
     await db.connect();
-    const report = (await db.query(`SELECT "id", "name", "filters" FROM "reports" WHERE "id" = $1`, [request.query.reportId])).rows[0];
+    const report = (await db.query(`SELECT "id", "name", "filters", "cache_date" FROM "reports" WHERE "id" = $1`, [request.query.reportId])).rows[0];
+    const currentDate = new Date().getTime();
+    const cacheDate = new Date(report.cache_date).getTime();
+    if (currentDate < cacheDate) {
+        const compressedBody = (await db.query({
+            text: `SELECT "cache_gzip" FROM "reports" WHERE "id"=$1`,
+            values: [request.query.reportId],
+        })).rows[0].cache_gzip;
+        reply.headers({ 'content-encoding': 'gzip' });
+        return reply.send(compressedBody);
+    }
+
     const types = ['properties', 'urls', 'messages', 'nodes', 'tags', 'types', 'status'];
     const filters = Object.fromEntries(types.map(obj => [obj, []]));
     for (const type of types) {
@@ -19,7 +30,6 @@ export const getResultsAll = async ({ request, reply }) => {
         text: `SELECT "id", "url" FROM "urls" WHERE "id" = ANY($1::uuid[]) OR "property_id" = ANY($2::uuid[])`,
         values: [filters.urls, filters.properties],
     })).rows;
-    await db.clean();
 
     const response = await graphql({
         request,
@@ -161,6 +171,13 @@ export const getResultsAll = async ({ request, reply }) => {
             .sort((a, b) => a.date > b.date ? -1 : 1),
     };
     const compressedBody = gzipSync(JSON.stringify(body));
+    const cacheExpiry = new Date();
+    cacheExpiry.setMinutes(cacheExpiry.getMinutes() + 5);
+    await db.query({
+        text: `UPDATE "reports" SET "cache_gzip"=$1, "cache_date"=$2 WHERE "id"=$3`,
+        values: [compressedBody, cacheExpiry, request.query.reportId],
+    });
+    await db.clean();
     reply.headers({ 'content-encoding': 'gzip' });
-    return reply.send(compressedBody)
+    return reply.send(compressedBody);
 }
