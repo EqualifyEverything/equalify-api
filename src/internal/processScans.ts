@@ -1,4 +1,4 @@
-import { chunk, db, sleep } from '#src/utils';
+import { chunk, db, isStaging, sleep, hashStringToUuid } from '#src/utils';
 
 export const processScans = async (event) => {
     console.log(`START PROCESS SCANS`);
@@ -18,7 +18,7 @@ export const processScans = async (event) => {
             console.log(`Start ${index} of ${batchesOfJobIds.length} batches`);
             await Promise.allSettled(batchOfJobIds.map(jobId => new Promise(async (res) => {
                 try {
-                    const scanResults = await fetch(`https://scan.equalify.app/results/${jobId}`, { signal: AbortSignal.timeout(10000) });
+                    const scanResults = await fetch(`https://scan${isStaging ? '-dev' : ''}.equalify.app/results/${jobId}`, { signal: AbortSignal.timeout(10000) });
                     const { result, status } = await scanResults.json();
                     if (['delayed', 'active', 'waiting'].includes(status)) {
                         remainingScans.push(jobId);
@@ -156,25 +156,28 @@ const scanProcessor = async ({ result, jobId, userId, propertyId }) => {
             }
         }
         for (const row of result.tags) {
+            const tagId = hashStringToUuid(row.tag);
             row.id =
                 (await db.query({
-                    text: `SELECT "id" FROM "tags" WHERE "user_id"=$1 AND "tag"=$2`,
-                    values: [userId, row.tag],
+                    text: `SELECT "id" FROM "tags" WHERE "id"=$1`,
+                    values: [tagId],
                 })).rows?.[0]?.id
                 ??
                 (await db.query({
-                    text: `INSERT INTO "tags" ("user_id", "tag") VALUES ($1, $2) RETURNING "id"`,
-                    values: [userId, row.tag],
+                    text: `INSERT INTO "tags" ("id", "tag") VALUES ($1, $2) RETURNING "id"`,
+                    values: [tagId, row.tag],
                 })).rows?.[0]?.id;
         }
         for (const row of result.messages) {
-            row.id = (await db.query({
-                text: `SELECT "id" FROM "messages" WHERE "user_id"=$1 AND "message"=$2 AND "type"=$3`,
-                values: [userId, row.message, row.type],
-            })).rows?.[0]?.id ??
+            const messageId = hashStringToUuid(row.message);
+            const existingMessageId = (await db.query({
+                text: `SELECT "id" FROM "messages" WHERE "id"=$1`,
+                values: [messageId],
+            })).rows?.[0]?.id;
+            row.id = existingMessageId ??
                 (await db.query({
-                    text: `INSERT INTO "messages" ("user_id", "message", "type") VALUES ($1, $2, $3) RETURNING "id"`,
-                    values: [userId, row.message, row.type],
+                    text: `INSERT INTO "messages" ("id", "message", "type") VALUES ($1, $2, $3) RETURNING "id"`,
+                    values: [messageId, row.message, row.type],
                 })).rows?.[0]?.id;
 
             for (const relatedNodeId of row.relatedNodeIds) {
@@ -195,21 +198,17 @@ const scanProcessor = async ({ result, jobId, userId, propertyId }) => {
                 }
             }
 
-            for (const relatedTagId of row.relatedTagIds) {
-                try {
-                    const messageTagExists = (await db.query({
-                        text: `SELECT "id" FROM "message_tags" WHERE "user_id"=$1 AND "message_id"=$2 AND "tag_id"=$3`,
-                        values: [userId, row.id, result.nodes.find(obj => obj.nodeId === relatedTagId)?.id],
-                    })).rows?.[0]?.id;
-                    if (!messageTagExists) {
+            if (!existingMessageId) {
+                for (const relatedTagId of row.relatedTagIds) {
+                    try {
                         await db.query({
-                            text: `INSERT INTO "message_tags" ("user_id", "message_id", "tag_id") VALUES ($1, $2, $3)`,
-                            values: [userId, row.id, result.tags.find(obj => obj.tagId === relatedTagId)?.id]
-                        })
+                            text: `INSERT INTO "message_tags" ("message_id", "tag_id") VALUES ($1, $2)`,
+                            values: [messageId, result.tags.find(obj => obj.tagId === relatedTagId)?.id]
+                        });
                     }
-                }
-                catch (err) {
-                    console.log(err, `messageTag error`, JSON.stringify({ row }));
+                    catch (err) {
+                        console.log(err, `messageTag error`, JSON.stringify({ row }));
+                    }
                 }
             }
         }
