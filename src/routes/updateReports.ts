@@ -20,8 +20,8 @@ export const updateReports = async ({ request, reply }) => {
         SELECT * FROM "reports" WHERE "id"=$1 AND "user_id"=$2
     `, [request.body.reportId, jwtClaims.sub]))?.rows?.[0];
     await db.query(`
-        UPDATE "reports" SET "name"=$1, "filters"=$2 WHERE "id"=$3 AND "user_id"=$4
-    `, [request.body.reportName ?? original.name, JSON.stringify(request.body.reportFilters ?? original.filters), request.body.reportId, jwtClaims.sub]);
+        UPDATE "reports" SET "name"=$1, "filters"=$2, "cache_date"=$3 WHERE "id"=$4 AND "user_id"=$5
+    `, [request.body.reportName ?? original.name, JSON.stringify(request.body.reportFilters ?? original.filters), new Date(), request.body.reportId, jwtClaims.sub]);
     await db.clean();
 
     return {

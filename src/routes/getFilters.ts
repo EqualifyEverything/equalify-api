@@ -4,11 +4,11 @@ export const getFilters = async ({ request, reply }) => {
     const response = await graphql({
         request,
         query: `{
-            messages {
+            messages(where: {old:{_eq: false}}) {
                 value: id
                 label: message
             }
-            tags {
+            tags(where: {old:{_eq: false}}) {
                 value: id
                 label: tag
             }

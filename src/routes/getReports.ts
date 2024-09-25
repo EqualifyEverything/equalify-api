@@ -4,7 +4,7 @@ export const getReports = async ({ request, reply }) => {
     const response = await graphql({
         request,
         query: `query($limit: Int, $offset: Int){
-            reports: reports_aggregate(limit: $limit, offset: $offset, ${(request.query.reportId) ? `where: { id: {_eq: "${request.query.reportId}"}}` : ''}
+            reports: reports_aggregate(limit: $limit, offset: $offset, order_by: {updated_at: desc}, ${(request.query.reportId) ? `where: { id: {_eq: "${request.query.reportId}"}}` : ''}
             ) { 
                 nodes {
                     id
