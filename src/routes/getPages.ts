@@ -36,9 +36,10 @@ export const getPages = async ({ request, reply }) => {
                 }, 
                 "scans":
                 {
+                    processing,
                     "updated_at":lastScanned
                 }
-            })=>({ url, id, propertyName, propertyId, lastScanned })),
+            })=>({ url, id, propertyName, propertyId, lastScanned:Date, processing:Boolean })),
         total: response?.urls?.count,
     };
 }

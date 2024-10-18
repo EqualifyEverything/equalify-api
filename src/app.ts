@@ -68,6 +68,6 @@ fastify.post('/help', {}, async (request, reply) => help({ request, reply }));
 fastify.post('/track/user', {}, async (request, reply) => trackUser({ request, reply }));
 
 fastify.listen({ port: 3000 }, (err) => {
-    console.log(`Server listening on ${fastify.server.address()}`)
+    console.log(`Server listening on ${fastify.server.address().port}`)
     if (err) throw err
 })
