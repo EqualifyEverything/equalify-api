@@ -25,9 +25,7 @@ export const getPages = async ({ request, reply }) => {
 
     return {
         status: 'success',
-        result: response?.properties?.nodes?.map(obj => ({
-            ...obj,
-        })),
-        total: response?.properties?.totalCount?.count,
+        result: response,
+        total: response?.count,
     };
 }
