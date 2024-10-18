@@ -25,7 +25,7 @@ export const getPages = async ({ request, reply }) => {
 
     return {
         status: 'success',
-        result: response.map(
+        result: response?.urls?.map(
             ({
                 url,
                 id, 
@@ -39,6 +39,6 @@ export const getPages = async ({ request, reply }) => {
                     updated_at:last_scanned
                 }
             })=>({ url, id, property_name, property_id, last_scanned })),
-        total: response?.count,
+        total: response?.urls?.count,
     };
 }
