@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import { addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, deleteUser, getApikey, getCharts, getFilters, getProperties, getReports, getResultsAll, getResultsMessages, getResultsSchema, getResultsTags, getResultsUrls, getScans, getUpdates, help, trackUser, updateProperties, updateReports } from '#src/routes';
+import { addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, deleteUser, getApikey, getCharts, getFilters, getProperties, getReports, getResultsAll, getResultsMessages, getResultsSchema, getResultsTags, getResultsUrls, getScans, getUpdates, help, trackUser, updateProperties, updateReports, getPages } from '#src/routes';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { db } from './utils';
 import { getScan } from './routes/getScan';
@@ -39,6 +39,7 @@ fastify.get('/get/results/messages', {}, async (request, reply) => getResultsMes
 fastify.get('/get/results/tags', {}, async (request, reply) => getResultsTags({ request, reply }));
 fastify.get('/get/results/urls', {}, async (request, reply) => getResultsUrls({ request, reply }));
 fastify.get('/get/properties', {}, async (request, reply) => getProperties({ request, reply }));
+fastify.get('/get/pages', {}, async (request, reply) => getPages({ request, reply }));
 fastify.get('/get/updates', {}, async (request, reply) => getUpdates({ request, reply }));
 fastify.get('/get/scans', {}, async (request, reply) => getScans({ request, reply }));
 fastify.get('/get/scan', {}, async (request, reply) => getScan({ request, reply }));
@@ -67,6 +68,6 @@ fastify.post('/help', {}, async (request, reply) => help({ request, reply }));
 fastify.post('/track/user', {}, async (request, reply) => trackUser({ request, reply }));
 
 fastify.listen({ port: 3000 }, (err) => {
-    console.log(`Server listening on ${fastify.server.address().port}`)
+    console.log(`Server listening on ${fastify.server.address()}`)
     if (err) throw err
 })
