@@ -25,20 +25,8 @@ export const getPages = async ({ request, reply }) => {
 
     return {
         status: 'success',
-        result: response?.urls.map(
-            ({
-                url,
-                id, 
-                "property":
-                { 
-                    "id":propertyId, 
-                    "name":propertyName 
-                }, 
-                "scans":
-                {
-                    processing,
-                    "updated_at":lastScanned
-                }
-            })=>({ url, id, propertyName, propertyId, lastScanned, processing }))
+        result: response?.urls?.map(obj => ({
+            ...obj,
+        }))
     };
 }
