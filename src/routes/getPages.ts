@@ -13,6 +13,7 @@ export const getPages = async ({ request, reply }) => {
                         }
                         scans {
                             updated_at
+                            processing
                         }
                     }
                 }
