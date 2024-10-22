@@ -1,5 +1,5 @@
 import { jwtClaims } from '#src/app';
-import { db } from '#src/utils';
+import { cm, db } from '#src/utils';
 
 export const trackUser = async ({ request, reply }) => {
     await db.connect();
@@ -29,7 +29,9 @@ export const trackUser = async ({ request, reply }) => {
         body: JSON.stringify({
             text: `*${user.first_name} ${user.last_name} (${user.email})* just signed up for *Equalify* from *${analytics?.city}, ${analytics?.state}* on *${analytics?.device}*`
         })
-    })
+    });
+
+    await cm.sendSmartEmail({ templateId: process.env.CM_TRANSACTIONAL_WELCOME, from: 'Equalify <noreply@equalify.app>', to: user.email });
 
     await db.clean();
     return {
