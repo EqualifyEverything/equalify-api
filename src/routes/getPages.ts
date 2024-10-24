@@ -7,6 +7,7 @@ export const getPages = async ({ request, reply }) => {
                 query($limit: Int, $offset: Int){
                 urls(limit: $limit, offset: $offset, order_by: {updated_at: desc}) {
                         url
+                        id
                         property {
                             id
                             name
@@ -15,6 +16,7 @@ export const getPages = async ({ request, reply }) => {
                             updated_at
                             processing
                         }
+                        totalCount: aggregate {count}
                     }
                 }
         `,
@@ -28,6 +30,7 @@ export const getPages = async ({ request, reply }) => {
         status: 'success',
         result: response?.urls?.map(obj => ({
             ...obj,
-        }))
+        })),
+        total: response?.scans?.totalCount?.count,
     };
 }
