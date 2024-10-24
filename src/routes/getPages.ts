@@ -5,7 +5,7 @@ export const getPages = async ({ request, reply }) => {
         request,
         query: `
                 query($limit: Int, $offset: Int){
-                urls: urls_aggregate(limit: $limit, offset: $offset, order_by: {updated_at: desc}) {
+                urls(limit: $limit, offset: $offset, order_by: {updated_at: desc}) {
                         url
                         id
                         property {
@@ -16,9 +16,12 @@ export const getPages = async ({ request, reply }) => {
                             updated_at
                             processing
                         }
-                        totalCount: aggregate {count}
                     }
-                    
+                }
+                urls_aggregate {
+                    aggregate {
+                    count
+                    }
                 }
         `,
         variables: {
@@ -32,6 +35,6 @@ export const getPages = async ({ request, reply }) => {
         result: response?.urls?.map(obj => ({
             ...obj,
         })),
-        total: response?.urls?.totalCount?.count,
+        total: response?.urls_aggregate?.count,
     };
 }
