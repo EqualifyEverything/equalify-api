@@ -5,7 +5,7 @@ export const getPages = async ({ request, reply }) => {
         request,
         query: `
                 query($limit: Int, $offset: Int){
-                urls(limit: $limit, offset: $offset, order_by: {updated_at: desc}) {
+                urls: urls_aggregate(limit: $limit, offset: $offset, order_by: {updated_at: desc}) {
                         url
                         id
                         property {
