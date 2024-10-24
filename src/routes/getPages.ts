@@ -31,6 +31,6 @@ export const getPages = async ({ request, reply }) => {
         result: response?.urls?.map(obj => ({
             ...obj,
         })),
-        total: response?.scans?.totalCount?.count,
+        total: response?.urls?.totalCount?.count,
     };
 }
