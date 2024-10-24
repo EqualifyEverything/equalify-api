@@ -16,10 +16,11 @@ export const getPages = async ({ request, reply }) => {
                             updated_at
                             processing
                         }
-                    }
-                    urls_aggregate {
-                        aggregate {
-                            count
+                    
+                        urls_aggregate {
+                            aggregate {
+                                count
+                            }
                         }
                     }
                 }
