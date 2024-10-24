@@ -16,8 +16,9 @@ export const getPages = async ({ request, reply }) => {
                             updated_at
                             processing
                         }
+                        totalCount: aggregate {count}
                     }
-                    totalCount: aggregate {count}
+                    
                 }
         `,
         variables: {
