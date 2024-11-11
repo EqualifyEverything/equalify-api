@@ -13,8 +13,10 @@ export const getPages = async ({ request, reply }) => {
                             name
                         }
                         scans {
+                            id
                             updated_at
                             processing
+                            url_id
                         }
                     }
                     urls_aggregate {
