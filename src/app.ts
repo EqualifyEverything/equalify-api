@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import { addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, deleteUser, getApikey, getCharts, getFilters, getProperties, getReports, getResultsAll, getResultsMessages, getResultsSchema, getResultsTags, getResultsUrls, getScans, getUpdates, help, trackUser, updateProperties, updateReports, getPages } from '#src/routes';
+import { addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, deleteUser, getApikey, getCharts, getFilters, getProperties, getReports, getResultsAll, getResultsMessages, getResultsSchema, getResultsTags, getResultsUrls, getScans, getUpdates, help, trackUser, updateProperties, updateReports, getPages, suggestIssue } from '#src/routes';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { db } from './utils';
 import { getScan } from './routes/getScan';
@@ -66,6 +66,7 @@ fastify.delete('/delete/user', {}, async (request, reply) => deleteUser({ reques
 // MISC requests
 fastify.post('/help', {}, async (request, reply) => help({ request, reply }));
 fastify.post('/track/user', {}, async (request, reply) => trackUser({ request, reply }));
+fastify.post('/ai/suggest-issue', {}, async (request, reply) => suggestIssue({ request, reply }));
 
 fastify.listen({ port: 3000 }, (err) => {
     console.log(`Server listening on ${fastify.server.address().port}`)
