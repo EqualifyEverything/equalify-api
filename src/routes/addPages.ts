@@ -102,18 +102,28 @@ export const addPages = async ({ request, reply }) => {
         })
       ).rows?.[0]?.id ??
       (
+        propertyToAddTo ? // only add to property if in request
         await db.query({
           text: `INSERT INTO "urls" ("user_id", "url", "property_id") VALUES ($1, $2, $3) RETURNING "id"`,
           values: [jwtClaims.sub, url, propertyToAddTo],
-        })
+        }) :
+        await db.query({
+            text: `INSERT INTO "urls" ("user_id", "url") VALUES ($1, $2) RETURNING "id"`,
+            values: [jwtClaims.sub, url],
+        }) 
       ).rows?.[0]?.id;
 
     // add job id and normalized url to scans table
     const scan = (
-      await db.query({
-        text: `INSERT INTO "scans" ("user_id", "property_id", "url_id", "job_id") VALUES ($1, $2, $3, $4) RETURNING "job_id"`,
-        values: [jwtClaims.sub, propertyToAddTo, urlId, parseInt(jobId)],
-      })
+        propertyToAddTo ? // only add to property if in request
+        await db.query({
+            text: `INSERT INTO "scans" ("user_id", "property_id", "url_id", "job_id") VALUES ($1, $2, $3, $4) RETURNING "job_id"`,
+            values: [jwtClaims.sub, propertyToAddTo, urlId, parseInt(jobId)],
+        }):
+        await db.query({
+            text: `INSERT INTO "scans" ("user_id", "url_id", "job_id") VALUES ($1, $2, $3) RETURNING "job_id"`,
+            values: [jwtClaims.sub, urlId, parseInt(jobId)],
+        })
     ).rows[0];
   };
 
