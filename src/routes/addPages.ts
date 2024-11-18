@@ -33,11 +33,11 @@ export const addPages = async ({ request, reply }) => {
       message: "An array of URLs to add is required.",
     };
   } else {
-    for (const url in request.body.urls) {
-      if (!validateUrl(url)) {
+    for (const urlObj of request.body.urls as Array<ScanResponseJob>) {
+      if (!validateUrl(urlObj.url)) {
         return {
           status: "error",
-          message: `${url} is not a valid url.`,
+          message: `${urlObj.url} is not a valid url.`,
         };
       }
     }
