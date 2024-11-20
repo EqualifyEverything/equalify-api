@@ -5,7 +5,8 @@ export const pollOutstandingScans = async ({ request, reply }) => {
     const startTime = new Date().getTime();
     const jobIds = (await db.query({
         text: `SELECT job_id, url_id FROM scans WHERE processing = TRUE`
-    })).rows.map(obj => {obj.job_id, obj.url_id});
+    }));
+    return jobIds;
 
     // make sure we sort the open jobids ASC
     const sortedJobIds = jobIds.jobIds.sort((a, b) => (a - b));
