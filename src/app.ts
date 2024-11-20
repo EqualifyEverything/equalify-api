@@ -3,6 +3,7 @@ import { addPages, getScan, addProperties, addReports, addResults, addScans, del
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { db } from './utils';
 import { suggestIssue } from './routes/suggestIssue';
+import { pollOutstandingScans } from './internal';
 
 export const fastify = Fastify();
 const cognitoJwtVerifier = CognitoJwtVerifier.create({
@@ -69,6 +70,9 @@ fastify.delete('/delete/user', {}, async (request, reply) => deleteUser({ reques
 fastify.post('/help', {}, async (request, reply) => help({ request, reply }));
 fastify.post('/track/user', {}, async (request, reply) => trackUser({ request, reply }));
 fastify.post('/ai/suggest-issue', {}, async (request, reply) => suggestIssue({ request, reply }));
+
+// TESTING requests
+fastify.post('/testing/pollOutstandingScans', {}, (request, reply) => pollOutstandingScans({ request, reply }));
 
 fastify.listen({ port: 3000 }, (err) => {
     console.log(`Server listening on ${fastify.server.address().port}`)

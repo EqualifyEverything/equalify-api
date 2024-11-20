@@ -1,5 +1,5 @@
 import { chunk, db, isStaging, sleep, hashStringToUuid } from '#src/utils';
-export const pollOutstandingScans = async () => {
+export const pollOutstandingScans = async ({ request, reply }) => {
     console.log(`START POLLING OPEN SCANS`);
     const startTime = new Date().getTime();
     const jobIds = (await db.query({
@@ -8,5 +8,7 @@ export const pollOutstandingScans = async () => {
     await db.clean();
     const deltaTime = new Date().getTime() - startTime;
     console.log(`END PROCESS SCANS, took ${deltaTime}`);
-    return;
+    return {
+        jobIds
+    };
 }
