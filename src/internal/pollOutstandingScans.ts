@@ -41,9 +41,10 @@ export const pollOutstandingScans = async ({ request, reply }) => {
     const deltaTime = new Date().getTime() - startTime;
     console.log(`END PROCESS SCANS, took ${deltaTime}`);
     return {
-        processedJobs: processedJobs,
-        failedJobs: failedJobs,
-        waitingJobs: waitingJobs,
-        perf: `${processedJobs.length} jobs processed, took ${deltaTime}ms`
+        openJobs        :sortedJobIds,
+        processedJobs   : processedJobs,
+        failedJobs      : failedJobs,
+        waitingJobs     : waitingJobs,
+        perf            : `${processedJobs.length} jobs processed, took ${deltaTime}ms`
     };
 }
