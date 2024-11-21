@@ -9,9 +9,9 @@ export const pollOutstandingScans = async ({ request, reply }) => {
 
     // make sure we sort the open jobids ASC
     const sortedJobIds = jobs.sort((a, b) => (a.job_id - b.job_id));
-    const processedJobs = [];
-    const failedJobs = [];
-    const waitingJobs = [];
+    let processedJobs = [];
+    let failedJobs = [];
+    let waitingJobs = [];
  
     for(const job of sortedJobIds){
         // check scan for result
