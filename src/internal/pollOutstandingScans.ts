@@ -46,9 +46,9 @@ export const pollOutstandingScans = async ({ request, reply }) => {
 
     await db.clean();
     const deltaTime = new Date().getTime() - startTime;
-    console.log(`END PROCESS SCANS, took ${deltaTime}`);
+    console.log(`END POLLING OPEN SCANS, took ${deltaTime}`);
     return {
-        openJobs        :sortedJobIds,
+        openJobs        : sortedJobIds,
         processedJobs   : processedJobs,
         failedJobs      : failedJobs,
         waitingJobs     : waitingJobs,
