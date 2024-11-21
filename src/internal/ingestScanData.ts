@@ -129,5 +129,5 @@ export const ingestScanData = async ( db, result, jobId, urlId, userId ) => {
         values: [result, jobId],
     });
 
-    return result.nodes;
+    return jobId;
 }
