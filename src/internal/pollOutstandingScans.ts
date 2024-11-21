@@ -28,7 +28,7 @@ export const pollOutstandingScans = async ({ request, reply }) => {
                 failedJobs.push(job.job_id)
             }
             else if (['completed'].includes(status)) {
-                if(result == null){ // if result is complete but the data is empty, set processing to false;
+                if(result == null || result == "null" || result == undefined){ // if result is complete but the data is empty, set processing to false;
                     await db.query({
                         text: `UPDATE "scans" SET "processing"=FALSE, "results"=$1 WHERE "job_id"=$2`,
                         values: [result, job.job_id],
