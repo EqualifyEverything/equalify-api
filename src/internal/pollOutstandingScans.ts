@@ -10,6 +10,8 @@ export const pollOutstandingScans = async ({ request, reply }) => {
     // make sure we sort the open jobids ASC
     const sortedJobIds = jobs.sort((a, b) => (a.job_id - b.job_id));
     const processedJobs = [];
+    const failedJobs = [];
+    const waitingJobs = [];
  
     for(const job of sortedJobIds){
         // check scan for result
@@ -18,10 +20,12 @@ export const pollOutstandingScans = async ({ request, reply }) => {
             const { result, status } = await scanResults.json();
 
             if (['delayed', 'active', 'waiting'].includes(status)) {
+                waitingJobs.push(job.job_id)
                 break; // jobIDs are processed in ascending order, so we can stop checking here
             }
             else if (['failed', 'unknown'].includes(status)) {
                 await db.query(`DELETE FROM "scans" WHERE "job_id"=$1`, [job.job_id]);
+                failedJobs.push(job.job_id)
             }
             else if (['completed'].includes(status)) {
                 const nodeIds = await ingestScanData( db, result, job.job_id, job.url_id, job.user_id );
@@ -38,6 +42,8 @@ export const pollOutstandingScans = async ({ request, reply }) => {
     console.log(`END PROCESS SCANS, took ${deltaTime}`);
     return {
         processedJobs: processedJobs,
+        failedJobs: failedJobs,
+        waitingJobs: waitingJobs,
         perf: `${processedJobs.length} jobs processed, took ${deltaTime}ms`
     };
 }
