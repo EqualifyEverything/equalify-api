@@ -7,16 +7,9 @@ import {
   db,
   isStaging,
 } from "#src/utils";
+import {ScanResponse, ScanResponseJob} from "#src/utils/interfaces";
 
-interface ScanResponseJob {
-  jobId: string;
-  url: string;
-}
 
-interface ScanResponse {
-  jobs: Array<ScanResponseJob>;
-  messages: Array<string>;
-}
 
 export const addPages = async ({ request, reply }) => {
   // check input for errors
@@ -107,7 +100,7 @@ export const addPages = async ({ request, reply }) => {
           text: `INSERT INTO "urls" ("user_id", "url", "property_id") VALUES ($1, $2, $3) RETURNING "id"`,
           values: [jwtClaims.sub, url, propertyToAddTo],
         }) :
-        await db.query({
+        await db.query({ // otherwise skip property field
             text: `INSERT INTO "urls" ("user_id", "url") VALUES ($1, $2) RETURNING "id"`,
             values: [jwtClaims.sub, url],
         }) 
