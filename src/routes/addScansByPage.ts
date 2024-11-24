@@ -34,6 +34,7 @@ export const addScansByPage = async ({ request, reply }) => {
   } else {
     for (const urlObj of req.urls) {
       if (!validateUrl(urlObj.url)) {
+        console.log(req)
         return {
           status: "error",
           message: `${urlObj.url} is not a valid url.`,
