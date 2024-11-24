@@ -29,7 +29,7 @@ export const addScansByPage = async ({ request, reply }) => {
   if (!req.urls) {
     return {
       status: "error",
-      message: "An array of URLs to send is required."+req,
+      message: "An array of URLs to send is required."+JSON.parse(request.body),
     };
   } else {
     for (const urlObj of req.urls) {
