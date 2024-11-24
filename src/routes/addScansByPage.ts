@@ -68,8 +68,8 @@ export const addScansByPage = async ({ request, reply }) => {
       ).rows?.[0]?.id
     const scanJobId = (
       await db.query({
-        text: `INSERT INTO "scans" ("user_id", "url_id", "job_id") VALUES ($1, $2, $3) RETURNING "job_id"`,
-        values: [jwtClaims.sub, urlId, parseInt(jobId)],
+        text: `INSERT INTO "scans" ("user_id", "url_id", "job_id", "processing") VALUES ($1, $2, $3, $4) RETURNING "job_id"`,
+        values: [jwtClaims.sub, urlId, parseInt(jobId), "TRUE"],
       })
     ).rows[0];
     addedJobsIds.push(scanJobId);
