@@ -1,5 +1,8 @@
 import { chunk, db, isStaging, sleep, hashStringToUuid } from '#src/utils';
 import { ingestScanData } from './ingestScanData';
+
+const MAX_RUNNING_DURATION = 1000*58; // run for 58 seconds
+
 export const pollOutstandingScans = async ({ request, reply }) => {
     console.log(`START POLLING OPEN SCANS`);
     const startTime = new Date().getTime();
@@ -16,6 +19,9 @@ export const pollOutstandingScans = async ({ request, reply }) => {
     for(const job of sortedJobIds){
         // check scan for result
         try{
+            const currentTime = new Date().getTime();
+            if(currentTime-startTime > MAX_RUNNING_DURATION) break; // end the process after MAX_RUNNING_TIME
+
             const scanResults = await fetch(`https://scan${isStaging ? '-dev' : ''}.equalify.app/results/${job.job_id}`, { signal: AbortSignal.timeout(10000) });
             const { result, status } = await scanResults.json();
 
