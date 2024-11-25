@@ -27,6 +27,7 @@ export const addScansByPage = async ({ request, reply }) => {
   const req = request;
   // check request
   if (!req.urls) {
+    console.log(JSON.stringify(req));
     return {
       status: "error",
       message: "An array of URLs to send is required."
@@ -34,7 +35,7 @@ export const addScansByPage = async ({ request, reply }) => {
   } else {
     for (const urlObj of req.urls) {
       if (!validateUrl(urlObj.url)) {
-        console.log(req)
+        console.log(JSON.stringify(req));
         return {
           status: "error",
           message: `${urlObj.url} is not a valid url.`,
