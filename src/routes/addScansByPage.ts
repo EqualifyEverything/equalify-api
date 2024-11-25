@@ -25,16 +25,14 @@ urls:
 export const addScansByPage = async ({ request, reply }) => {
 
   const data = JSON.parse(request.body);
-  return {
-    status: "error",
-    message: JSON.stringify(data)
-  };
+  
 
   // check request
   if (!data.urls) {
     return {
       status: "error",
-      message: "An array of URLs to send is required."
+      //message: "An array of URLs to send is required."
+      message: JSON.stringify(data.urls)
     };
   } else {
     for (const urlObj of data.urls as Array<UrlForScan>) {
