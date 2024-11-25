@@ -3,6 +3,11 @@ export interface ScanResponseJob {
   url: string;
 }
 
+export interface UrlForScan {
+  url: string;
+  urlId: string;
+} 
+
 export interface ScanResponse {
   jobs: Array<ScanResponseJob>;
   messages: Array<string>;

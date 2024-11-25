@@ -1,4 +1,4 @@
-import { ScanResponse, ScanResponseJob } from "#src/utils/interfaces";
+import { ScanResponse, ScanResponseJob, UrlForScan } from "#src/utils/interfaces";
 import {
   formatId,
   validateDiscovery,
@@ -31,7 +31,7 @@ export const addScansByPage = async ({ request, reply }) => {
       message: "An array of URLs to send is required."
     };
   } else {
-    for (const urlObj of request.body.urls) {
+    for (const urlObj of request.body.urls as Array<UrlForScan>) {
       if (!validateUrl(urlObj.url)) {
         return {
           status: "error",
