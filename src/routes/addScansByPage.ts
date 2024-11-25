@@ -24,17 +24,13 @@ urls:
 
 export const addScansByPage = async ({ request, reply }) => {
 
-  return JSON.stringify(request.body.urls);
-  
-
-  // check request
-  if (!data.urls) {
+  if (!request.body.urls) {
     return {
       status: "error",
       message: "An array of URLs to send is required."
     };
   } else {
-    for (const urlObj of data.urls) {
+    for (const urlObj of request.body.urls) {
       if (!validateUrl(urlObj.url)) {
         return {
           status: "error",
@@ -52,7 +48,7 @@ export const addScansByPage = async ({ request, reply }) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          urls: data.urls,
+          urls: request.body.urls,
           userId: jwtClaims.sub,
         }),
       }
