@@ -18,20 +18,15 @@ export const addPages = async ({ request, reply }) => {
       status: "error",
       message: 'The "mode" field is required.',
     };
-  }else{
-    return {
-      status: "OK",
-      message: 'OK',
-    };
   }
 
-  if (!request.body.urls && request.body.mode != "sitemap") {
+  if (!request.body.data.urls && request.body.data.mode != "sitemap") {
     return {
       status: "error",
       message: "An array of URLs to add is required.",
     };
   } else {
-    for (const urlObj of request.body.urls) {
+    for (const urlObj of request.body.data.urls) {
       if (!validateUrl(urlObj.url)) {
         return {
           status: "error",
@@ -41,26 +36,26 @@ export const addPages = async ({ request, reply }) => {
     }
   }
 
-  if (request.body.mode == "sitemap") {
-    if (!request.body.sitemapUrl) {
+  if (request.body.data.mode == "sitemap") {
+    if (!request.body.data.sitemapUrl) {
       return {
         status: "error",
         message: `Sitemap mode reqiures the sitemapUrl field.`,
       };
     }
-    if (!validateUrl(request.body.sitemapUrl)) {
+    if (!validateUrl(request.body.data.sitemapUrl)) {
       return {
         status: "error",
-        message: `${request.body.sitemapUrl} is not a valid sitemapUrl.`,
+        message: `${request.body.data.sitemapUrl} is not a valid sitemapUrl.`,
       };
     }
   }
 
-  const propertyToAddTo = request.body.property ? request.body.property : null;
+  const propertyToAddTo = request.body.data.property ? request.body.data.property : null;
   let jobIds: ScanResponse;
 
   
-  if (request.body.mode == "sitemap") { // send sitemap to scan
+  if (request.body.data.mode == "sitemap") { // send sitemap to scan
     jobIds = await (
       await fetch(
         `https://scan${isStaging ? "-dev" : ""}.equalify.app/generate/url`, // single-url endpoint
@@ -68,7 +63,7 @@ export const addPages = async ({ request, reply }) => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            url: request.body.sitemapUrl,
+            url: request.body.data.sitemapUrl,
             userId: jwtClaims.sub,
           }),
         }
@@ -82,7 +77,7 @@ export const addPages = async ({ request, reply }) => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            urls: request.body.urls,
+            urls: request.body.data.urls,
             userId: jwtClaims.sub,
           }),
         }
