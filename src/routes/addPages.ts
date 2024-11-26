@@ -14,6 +14,7 @@ import {ScanResponse, ScanResponseJob} from "#src/utils/interfaces";
 export const addPages = async ({ request, reply }) => {
   // check input for errors
   if (!request.body.mode) {
+    return request.body;
     return {
       status: "error",
       message: 'The "mode" field is required.',
