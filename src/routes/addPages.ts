@@ -26,7 +26,7 @@ export const addPages = async ({ request, reply }) => {
       message: "An array of URLs to add is required.",
     };
   } else {
-    for (const urlObj of request.body.urls as Array<ScanResponseJob>) {
+    for (const urlObj of request.body.urls) {
       if (!validateUrl(urlObj.url)) {
         return {
           status: "error",
