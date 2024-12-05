@@ -19,8 +19,6 @@ export const getPage = async ({ request, reply }) => {
 
     return {
         status: 'success',
-        result: response?.url_by_id.map(obj => ({
-            ...obj,
-        })),
+        result: response,
     };
 }
