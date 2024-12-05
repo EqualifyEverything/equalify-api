@@ -3,8 +3,9 @@ import { graphql } from '#src/utils';
 export const getPage = async ({ request, reply }) => {
     const response = await graphql({
         request,
-        query: `query($id: uuid!){
-            url_by_id(where: {id: {_eq: $id}}) {
+        query: `
+        query($id: uuid!){
+            urls_by_pk(id:$id) {
                id 
                url
                created_at
@@ -28,7 +29,7 @@ export const getPage = async ({ request, reply }) => {
 
     return {
         status: 'success',
-        result: response?.url_by_id?.map(obj => ({
+        result: response?.urls_by_pk?.map(obj => ({
             ...obj,
         })),
     };
