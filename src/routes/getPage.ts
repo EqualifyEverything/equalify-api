@@ -4,7 +4,7 @@ export const getPage = async ({ request, reply }) => {
     const response = await graphql({
         request,
         query: `query($id: uuid!){
-            url_by_id(id:$id) {
+            url_by_id(where: {id: {_eq: $id}}) {
                id 
                url
                created_at
