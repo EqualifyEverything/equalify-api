@@ -6,10 +6,10 @@ export const getPage = async ({ request, reply }) => {
         query: `
         query($id: uuid!){
             urls_by_pk(id:$id) {
-               id 
-               url
-               created_at
                updated_at
+               url
+               id
+               created_at
                property { 
                     id 
                     name 
@@ -29,8 +29,6 @@ export const getPage = async ({ request, reply }) => {
 
     return {
         status: 'success',
-        result: response?.urls_by_pk?.map(obj => ({
-            ...obj,
-        })),
+        result: response?.urls_by_pk,
     };
 }
