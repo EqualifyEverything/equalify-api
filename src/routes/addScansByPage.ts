@@ -25,9 +25,8 @@ urls:
 export const addScansByPage = async ({ request, reply }) => {
 
   const req = JSON.parse(request.body);
-  return JSON.stringify(req);
 
-  if (!req.urls) {
+  if (!Array.isArray(req.urls)) {
     return {
       status: "error",
       message: `${req.urls} is not an array of URLs.`
