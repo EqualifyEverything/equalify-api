@@ -49,6 +49,7 @@ export const pollOutstandingScans = async ({ request, reply }) => {
 
         } catch (err) {
             console.log(err);
+            return;
         }
     }
 
