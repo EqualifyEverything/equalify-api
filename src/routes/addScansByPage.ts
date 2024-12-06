@@ -25,7 +25,7 @@ urls:
 export const addScansByPage = async ({ request, reply }) => {
 
   const req = JSON.parse(request.body);
-  return JSON.parse(req);
+  return JSON.stringify(req);
 
   if (!req.urls) {
     return {
