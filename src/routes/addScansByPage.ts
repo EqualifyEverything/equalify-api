@@ -24,7 +24,8 @@ urls:
 
 export const addScansByPage = async ({ request, reply }) => {
 
-  const req = await request.body;
+  const reqWrapper = JSON.parse(request);
+  const req = reqWrapper.body;
 
   if (!req.urls) {
     return {

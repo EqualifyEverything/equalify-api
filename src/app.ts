@@ -1,10 +1,9 @@
 import Fastify from 'fastify';
-import { addPages, getScan, addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, deleteUser, getApikey, getCharts, getFilters, getProperties, getReports, getResultsAll, getResultsMessages, getResultsSchema, getResultsTags, getResultsUrls, getScans, getUpdates, help, trackUser, updateProperties, updateReports, getPages, addScansByPage } from '#src/routes';
+import { addPages, getScan, addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, deleteUser, getApikey, getCharts, getFilters, getPage, getProperties, getReports, getResultsAll, getResultsMessages, getResultsSchema, getResultsTags, getResultsUrls, getScans, getUpdates, help, trackUser, updateProperties, updateReports, getPages, addScansByPage } from '#src/routes';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { db } from './utils';
 import { suggestIssue } from './routes/suggestIssue';
 import { pollOutstandingScans } from 'internal/pollOutstandingScans'
-import { getPage } from './routes/getPage';
 
 export const fastify = Fastify();
 const cognitoJwtVerifier = CognitoJwtVerifier.create({
