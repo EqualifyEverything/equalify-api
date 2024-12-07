@@ -7,7 +7,7 @@ export const pollOutstandingScans = async ({ request, reply }) => {
   console.log(`START POLLING OPEN SCANS`);
   try {
     const startTime = new Date().getTime();
-
+    await db.connect();
     const jobs = (
       await db.query({
         text: `SELECT job_id, url_id, user_id FROM scans WHERE processing = TRUE`,
