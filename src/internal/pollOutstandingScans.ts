@@ -13,6 +13,7 @@ export const pollOutstandingScans = async ({ request, reply }) => {
         text: `SELECT job_id, url_id, user_id FROM scans WHERE processing = TRUE`,
       })
     ).rows;
+    if(!jobs){ console.log(`No open scans found, exiting...`); return; }
 
     // make sure we sort the open jobids ASC
     const sortedJobIds = jobs.sort((a, b) => a.job_id - b.job_id);

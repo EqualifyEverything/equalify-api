@@ -1,4 +1,4 @@
-import ServerlessClient from 'serverless-postgres';
+import * as ServerlessClient from 'serverless-postgres';
 
 export const db = new ServerlessClient({
     user: process.env.DB_USER,
