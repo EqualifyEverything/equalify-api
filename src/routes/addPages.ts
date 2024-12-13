@@ -51,7 +51,7 @@ export const addPages = async ({ request, reply }) => {
     }
   }
 
-  const propertyToAddTo = request.body.data.property ? request.body.data.property : null;
+  const propertyToAddTo = request.body.data.property && request.body.data.property !== "none" ? request.body.data.property : null;
   let jobIds: ScanResponse;
 
   
