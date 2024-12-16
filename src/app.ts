@@ -50,6 +50,7 @@ fastify.get('/get/filters', {}, async (request, reply) => getFilters({ request, 
 fastify.get('/get/charts', {}, async (request, reply) => getCharts({ request, reply }));
 fastify.get('/get/apikey', {}, async (request, reply) => getApikey({ request, reply }));
 fastify.get('/get/page', {}, async (request, reply) => getPage({ request, reply }));
+fastify.get('/get/pages/property', {}, async (request, reply) => getPage({ request, reply }));
 
 // POST requests
 fastify.post('/add/results', {}, async (request, reply) => addResults({ request, reply }));

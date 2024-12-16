@@ -1,0 +1,30 @@
+import { graphql } from '#src/utils';
+
+export const getPagesByProperty = async ({ request, reply }) => {
+    const response = await graphql({
+        request,
+        query: `
+        query($id: uuid!,$limit: Int, $offset: Int){
+            properties_by_pk(id:$id) {
+               urls(limit: $limit, offset: $offset) {
+                url
+                id
+                scans {
+                    processing
+                    updated_at
+                }
+               }
+            }
+        }`,
+        variables: {
+            id: request.query.propertyId,
+            limit: parseInt(request.query.limit ?? 50),
+            offset: parseInt(request.query.offset ?? 0),
+        },
+    });
+
+    return {
+        status: 'success',
+        result: response?.properties_by_pk,
+    };
+}
