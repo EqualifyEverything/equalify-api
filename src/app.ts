@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import { addPages, getScan, addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, deleteUser, getApikey, getCharts, getFilters, getPage, getProperties, getReports, getResultsAll, getResultsMessages, getResultsSchema, getResultsTags, getResultsUrls, getScans, getUpdates, help, trackUser, updateProperties, updateReports, getPages, addScansByPage } from '#src/routes';
+import { addPages, getScan, addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, deleteUser, getApikey, getCharts, getFilters, getPage, getProperties, getReports, getResultsAll, getResultsMessages, getResultsSchema, getResultsTags, getResultsUrls, getScans, getUpdates, help, trackUser, updateProperties, updateReports, getPages, addScansByPage, getPagesByProperty } from '#src/routes';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { db } from './utils';
 import { suggestIssue } from './routes/suggestIssue';
@@ -50,7 +50,7 @@ fastify.get('/get/filters', {}, async (request, reply) => getFilters({ request, 
 fastify.get('/get/charts', {}, async (request, reply) => getCharts({ request, reply }));
 fastify.get('/get/apikey', {}, async (request, reply) => getApikey({ request, reply }));
 fastify.get('/get/page', {}, async (request, reply) => getPage({ request, reply }));
-fastify.get('/get/pages/property', {}, async (request, reply) => getPage({ request, reply }));
+fastify.get('/get/pages/property', {}, async (request, reply) => getPagesByProperty({ request, reply }));
 
 // POST requests
 fastify.post('/add/results', {}, async (request, reply) => addResults({ request, reply }));

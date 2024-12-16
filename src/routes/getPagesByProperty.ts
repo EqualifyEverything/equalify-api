@@ -5,7 +5,7 @@ export const getPagesByProperty = async ({ request, reply }) => {
         request,
         query: `
         query($property_id: uuid!,$limit: Int, $offset: Int){
-            properties_by_pk(where: {id: {_eq:$property_id}}) {
+            properties_by_pk(id:$property_id) {
                urls(limit: $limit, offset: $offset) {
                 url
                 id
