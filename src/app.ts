@@ -75,7 +75,7 @@ fastify.post('/track/user', {}, async (request, reply) => trackUser({ request, r
 fastify.post('/ai/suggest-issue', {}, async (request, reply) => suggestIssue({ request, reply }));
 
 // TESTING requests
-fastify.post('/testing/pollOutstandingScans', {}, async (request, reply) => pollOutstandingScans({ request, reply }));
+//fastify.post('/testing/pollOutstandingScans', {}, async (request, reply) => pollOutstandingScans({ request, reply }));
 
 fastify.listen({ port: 3000 }, (err) => {
     console.log(`Server listening on ${fastify.server.address().port}`)
