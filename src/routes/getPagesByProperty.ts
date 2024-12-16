@@ -6,14 +6,23 @@ export const getPagesByProperty = async ({ request, reply }) => {
         query: `
         query($property_id: uuid!,$limit: Int, $offset: Int){
             properties_by_pk(id:$property_id) {
-               urls(limit: $limit, offset: $offset) {
-                url
                 id
-                scans {
-                    processing
-                    updated_at
+                name
+                propertyUrl: property_url
+                lastProcessed: last_processed
+                archived
+                discovery
+                processed
+                updatedAt: updated_at
+                createdAt: created_at
+                urls(limit: $limit, offset: $offset) {
+                    url
+                    id
+                    scans(order_by: {updated_at: desc}) {
+                        processing
+                        updated_at
+                    }
                 }
-               }
             }
         }`,
         variables: {
