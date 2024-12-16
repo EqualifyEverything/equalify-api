@@ -4,8 +4,8 @@ export const getPagesByProperty = async ({ request, reply }) => {
     const response = await graphql({
         request,
         query: `
-        query($id: uuid!,$limit: Int, $offset: Int){
-            properties_by_pk(where: {id: {_eq:$id}}) {
+        query($property_id: uuid!,$limit: Int, $offset: Int){
+            properties_by_pk(where: {id: {_eq:$property_id}}) {
                urls(limit: $limit, offset: $offset) {
                 url
                 id
@@ -17,7 +17,7 @@ export const getPagesByProperty = async ({ request, reply }) => {
             }
         }`,
         variables: {
-            id: request.query.id,
+            property_id: request.query.property_id,
             limit: parseInt(request.query.limit ?? 50),
             offset: parseInt(request.query.offset ?? 0),
         },
@@ -25,8 +25,6 @@ export const getPagesByProperty = async ({ request, reply }) => {
 
     return {
         status: 'success',
-        result: response?.properties_by_pk.map(obj => ({
-            ...obj,
-        })),
+        result: response?.properties_by_pk,
     };
 }
