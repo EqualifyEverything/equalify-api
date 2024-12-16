@@ -25,6 +25,6 @@ export const getPagesByProperty = async ({ request, reply }) => {
 
     return {
         status: 'success',
-        result: response?.properties_by_pk,
+        result: response?.properties_by_pk?.urls,
     };
 }
