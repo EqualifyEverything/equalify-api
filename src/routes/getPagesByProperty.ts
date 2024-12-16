@@ -17,7 +17,7 @@ export const getPagesByProperty = async ({ request, reply }) => {
             }
         }`,
         variables: {
-            id: request.query.propertyId,
+            id: request.query.id,
             limit: parseInt(request.query.limit ?? 50),
             offset: parseInt(request.query.offset ?? 0),
         },
