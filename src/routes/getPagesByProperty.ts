@@ -23,6 +23,11 @@ export const getPagesByProperty = async ({ request, reply }) => {
                         updated_at
                     }
                 }
+                urls_aggregate {
+                    aggregate {
+                        count
+                    }
+                }
             }
         }`,
         variables: {
