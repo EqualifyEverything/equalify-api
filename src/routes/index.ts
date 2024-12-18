@@ -29,5 +29,6 @@ export * from './addPages'
 export * from './getScan'
 export * from './suggestIssue'
 export * from './addScansByPage'
+export * from './updatePropertyOnPages'
 
 
