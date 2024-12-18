@@ -8,7 +8,7 @@ import {
   isStaging,
   validateUuid,
 } from "#src/utils";
-import {ScanResponse, ScanResponseJob} from "#src/utils/interfaces";
+import { ScanResponse, ScanResponseJob } from "#src/utils/interfaces";
 
 /*
 input:
@@ -30,7 +30,6 @@ export const updatePropertyOnPages = async ({ request, reply }) => {
     };
   }
 
- 
   for (const id of request.body.urls) {
     if (!validateUuid(id)) {
       return {
@@ -39,15 +38,25 @@ export const updatePropertyOnPages = async ({ request, reply }) => {
       };
     }
   }
-  
+
   let count = 0;
   for (const id of request.body.urls) {
     const change =
-        await db.query(`
+      request.body.property == "null" // if we get "null"<string> update to NULL in the db
+        ? await db.query(
+            `
+      UPDATE "urls" SET "property_id"=NULL WHERE "id"=$2 AND "user_id"=$3
+  `,
+            [request.body.property, id, jwtClaims.sub]
+          )
+        : await db.query(
+            `
           UPDATE "urls" SET "property_id"=$1 WHERE "id"=$2 AND "user_id"=$3
-      `, [ request.body.property, id, jwtClaims.sub]);
-    if(change) count++;
-  };
+      `,
+            [request.body.property, id, jwtClaims.sub]
+          );
+    if (change) count++;
+  }
   await db.clean();
 
   return {
