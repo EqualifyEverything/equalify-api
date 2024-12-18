@@ -34,8 +34,8 @@ export const addScansByProperty = async ({ request, reply }) => {
         variables: {
           propertyId: propertyId,
         },
-    })).rows?.[0];
-    urlsToScan.push(urls);
+    })).data?.urls;
+    if(urls) urlsToScan.push(urls);
   }
   
   await db.clean();
