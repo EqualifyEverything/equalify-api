@@ -34,7 +34,7 @@ export const addScansByProperty = async ({ request, reply }) => {
         variables: {
           propertyId: propertyId,
         },
-    })).data?.urls;
+    })).urls;
     if(urls) urlsToScan.push(urls);
   }
   
