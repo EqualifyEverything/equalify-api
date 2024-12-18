@@ -26,10 +26,10 @@ export const getFilters = async ({ request, reply }) => {
     return {
         status: 'success',
         result: {
-            messages: response.messages.map(obj => ({ ...obj, type: 'messages' })),
-            tags: response.tags.map(obj => ({ ...obj, type: 'tags' })),
-            properties: response.properties.map(obj => ({ ...obj, type: 'properties' })),
-            urls: response.urls.map(obj => ({ ...obj, type: 'urls' })),
+            messages: response.messages?.map(obj => ({ ...obj, type: 'messages' })),
+            tags: response.tags?.map(obj => ({ ...obj, type: 'tags' })),
+            properties: response.properties?.map(obj => ({ ...obj, type: 'properties' })),
+            urls: response.urls?.map(obj => ({ ...obj, type: 'urls' })),
             statuses: [
                 { label: 'Active', value: 'active', type: 'status' },
                 { label: 'Equalified', value: 'equalified', type: 'status' },
