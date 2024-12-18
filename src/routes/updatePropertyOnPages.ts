@@ -23,7 +23,7 @@ pages: [
 
 export const updatePropertyOnPages = async ({ request, reply }) => {
   // check input for errors
-  if (!request.body.data.property) {
+  if (!request.body.property) {
     return {
       status: "error",
       message: 'The "property" field is required.',
@@ -31,7 +31,7 @@ export const updatePropertyOnPages = async ({ request, reply }) => {
   }
 
  
-  for (const id of request.body.data.urls) {
+  for (const id of request.body.urls) {
     if (!validateUuid(id)) {
       return {
         status: "error",
@@ -41,11 +41,11 @@ export const updatePropertyOnPages = async ({ request, reply }) => {
   }
   
   let count = 0;
-  for (const id of request.body.data.urls) {
+  for (const id of request.body.urls) {
     const change =
         await db.query(`
           UPDATE "urls" SET "property_id"=$1 WHERE "id"=$2 AND "user_id"=$3
-      `, [ request.body.data.property, id, jwtClaims.sub]);
+      `, [ request.body.property, id, jwtClaims.sub]);
     if(change) count++;
   };
   await db.clean();
