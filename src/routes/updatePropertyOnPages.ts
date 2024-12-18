@@ -45,9 +45,9 @@ export const updatePropertyOnPages = async ({ request, reply }) => {
       request.body.property == "null" // if we get "null"<string> update to NULL in the db
         ? await db.query(
             `
-      UPDATE "urls" SET "property_id"=NULL WHERE "id"=$2 AND "user_id"=$3
+      UPDATE "urls" SET "property_id"=NULL WHERE "id"=$1 AND "user_id"=$2
   `,
-            [request.body.property, id, jwtClaims.sub]
+            [id, jwtClaims.sub]
           )
         : await db.query(
             `
