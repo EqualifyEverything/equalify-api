@@ -15,10 +15,11 @@ export const addScansByProperty = async ({ request, reply }) => {
   const urlsToScan = request.body.propertyIds.map(async (propertyId)=>{
     return await graphql({
         request,
-        query: `
-        urls(where: {property_id: {_eq: $propertyId}}) {
-            urlId: id
-            url
+        query: `{
+            urls(where: {property_id: {_eq: $propertyId}}) {
+                urlId: id
+                url
+            }
         }`,
         variables: {
           propertyId: propertyId,
