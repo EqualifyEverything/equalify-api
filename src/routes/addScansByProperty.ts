@@ -22,21 +22,21 @@ export const addScansByProperty = async ({ request, reply }) => {
   const urls = (await graphql({
     request,
     query: `
-    query{
-        urls( where: { property_id: { _eq: $propertyid } } ) {
+    query($property_id: uuid!){
+        urls( where: { property_id: { _eq: $property_id } } ) {
             urlId: id
             url
         }
     }`,
     variables: {
-      propertyid: request.body.propertyId,
+        property_id: request.body.propertyId,
     },
-  })).stringify();
+  })).data;
 
   //await db.clean();
 
   return {
     status: "success",
-    message: urls?.data,
+    message: urls,
   };
 };
