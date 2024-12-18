@@ -4,17 +4,17 @@ import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 const lambda = new LambdaClient();
 
 export const addScansByProperty = async ({ request, reply }) => {
-  if (!request.body.propertyId) {
+  if (!request.query.propertyId) {
     return {
       status: "error",
       message: "PropertyId is required.",
     };
   }
 
-  if (!validateUuid(request.body.propertyId))
+  if (!validateUuid(request.query.propertyId))
     return {
       status: "error",
-      message: `${request.body.propertyId} is not a valid of UUID.`,
+      message: `${request.query.propertyId} is not a valid of UUID.`,
     };
 
   //await db.connect();
@@ -29,7 +29,7 @@ export const addScansByProperty = async ({ request, reply }) => {
         }
     }`,
     variables: {
-      property_id: request.body.propertyId,
+      property_id: request.query.propertyId,
     },
   });
 
