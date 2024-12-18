@@ -37,6 +37,6 @@ export const addScansByProperty = async ({ request, reply }) => {
 
   return {
     status: "success",
-    message: urls,
+    message: urls?.data,
   };
 };
