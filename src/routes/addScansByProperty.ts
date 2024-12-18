@@ -31,8 +31,9 @@ export const addScansByProperty = async ({ request, reply }) => {
     variables: {
         property_id: request.body.propertyId,
     },
-  })).data;
+  }));
 
+  console.log(urls);
   //await db.clean();
 
   return {
