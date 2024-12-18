@@ -23,15 +23,15 @@ export const addScansByProperty = async ({ request, reply }) => {
     request,
     query: `
     query{
-        urls( where: { property_id: { _eq: $property_id } } ) {
+        urls( where: { property_id: { _eq: $propertyid } } ) {
             urlId: id
             url
         }
     }`,
     variables: {
-      property_id: request.body.propertyId,
+      propertyid: request.body.propertyId,
     },
-  })).data?.urls;
+  })).stringify();
 
   //await db.clean();
 
