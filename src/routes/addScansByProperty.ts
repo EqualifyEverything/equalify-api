@@ -1,5 +1,5 @@
 import { jwtClaims } from "#src/app";
-import { db, graphql, isStaging, validateUrl } from "#src/utils";
+import { db, graphql, isStaging, validateUrl, validateUuid } from "#src/utils";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 const lambda = new LambdaClient();
 
@@ -11,9 +11,18 @@ export const addScansByProperty = async ({ request, reply }) => {
     };
   }
 
+  for(const propertyId of request.body.propertyIds){
+    if(!validateUuid(propertyId)) return {
+        status: "error",
+        message: `${propertyId} is not a valid of UUID.`
+      }; 
+  }
+
   await db.connect();
-  const urlsToScan = request.body.propertyIds.map(async (propertyId)=>{
-    return await graphql({
+
+  let urlsToScan = [];
+  for(const propertyId of request.body.propertyIds){
+    const urls = await graphql({
         request,
         query: `{
             urls(where: {property_id: {_eq: $propertyId}}) {
@@ -24,8 +33,9 @@ export const addScansByProperty = async ({ request, reply }) => {
         variables: {
           propertyId: propertyId,
         },
-      });
-  })
+    });
+    urlsToScan.push(...urls);
+  }
   
   await db.clean();
 
