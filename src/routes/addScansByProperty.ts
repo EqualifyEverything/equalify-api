@@ -22,7 +22,8 @@ export const addScansByProperty = async ({ request, reply }) => {
 
   let urlsToScan = [];
   for(const propertyId of request.body.propertyIds){
-    const urls = await graphql({
+    const urls = (
+        await graphql({
         request,
         query: `{
             urls(where: {property_id: {_eq: $propertyId}}) {
@@ -33,7 +34,7 @@ export const addScansByProperty = async ({ request, reply }) => {
         variables: {
           propertyId: propertyId,
         },
-    });
+    })).rows?.[0];
     urlsToScan.push(urls);
   }
   
