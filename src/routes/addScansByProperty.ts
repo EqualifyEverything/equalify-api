@@ -19,7 +19,7 @@ export const addScansByProperty = async ({ request, reply }) => {
 
   //await db.connect();
 
-  const urls = await graphql({
+  const urls = (await graphql({
     request,
     query: `
     query{
@@ -31,7 +31,7 @@ export const addScansByProperty = async ({ request, reply }) => {
     variables: {
       property_id: request.body.propertyId,
     },
-  });
+  })).data?.urls;
 
   //await db.clean();
 
