@@ -1,7 +1,7 @@
 export * from './addProperties'
 export * from './addReports'
 export * from './addResults'
-export * from './addScans'
+export * from './addScansByProperty'
 export * from './deleteProperties'
 export * from './deleteReports'
 export * from './getProperties'
@@ -30,5 +30,6 @@ export * from './getScan'
 export * from './suggestIssue'
 export * from './addScansByPage'
 export * from './updatePropertyOnPages'
+export * from './addScansByProperty'
 
 
