@@ -35,7 +35,7 @@ export const addProperties = async ({ request, reply }) => {
 
     await db.connect();
     const id = (await db.query(`
-        INSERT INTO "properties" ("user_id", "name") VALUES ($1, $2, $3, $4) RETURNING "id"
+        INSERT INTO "properties" ("user_id", "name") VALUES ($1, $2) RETURNING "id"
     `, [
         jwtClaims.sub, 
         request.body.propertyName, 
