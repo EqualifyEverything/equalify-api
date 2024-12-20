@@ -7,14 +7,14 @@ export const deletePages = async ({ request, reply }) => {
     if (!Array.isArray(req.pageIds)) {
         return {
           status: "error",
-          message: `${req.urls.stringify()} is not an array of URLs.`
+          message: `${req.urls.stringify()} is not an array of page IDs.`
         };
       } else {
         for (const url of req.pageIds) {
           if (!validateUuid(url)) {
             return {
               status: "error",
-              message: `${url} is not a valid url.`,
+              message: `${url} is not a valid page ID.`,
             };
           }
         }
@@ -26,7 +26,7 @@ export const deletePages = async ({ request, reply }) => {
     for (const url of req.pageIds) {
         const deletedId = (await db.query(`
             DELETE FROM "urls" WHERE "id"=$1 AND "user_id"=$2 RETURNING "id"
-        `, [request.query.ageId, jwtClaims.sub])).rows.map(obj => obj.id);
+        `, [url, jwtClaims.sub])).rows.map(obj => obj.id);
         deletedIds.push(deletedId);
     };
 
