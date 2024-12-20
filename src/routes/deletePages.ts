@@ -2,7 +2,7 @@ import { jwtClaims } from '#src/app';
 import { db, validateUuid } from '#src/utils';
 
 export const deletePages = async ({ request, reply }) => {
-    const req = request.body;
+    const req = request.query;
 
     if (!Array.isArray(req.pageIds)) {
         return {
@@ -24,7 +24,7 @@ export const deletePages = async ({ request, reply }) => {
 
     let deletedIds = [];
     for (const url of req.pageIds) {
-        const deletedId = (await db.query(`
+        const deletedId = await (await db.query(`
             DELETE FROM "urls" WHERE "id"=$1 AND "user_id"=$2 RETURNING "id"
         `, [url, jwtClaims.sub])).rows.map(obj => obj.id);
         deletedIds.push(deletedId);
