@@ -7,7 +7,7 @@ export const deletePages = async ({ request, reply }) => {
     if (!Array.isArray(req.pageIds)) {
         return {
           status: "error",
-          message: `${req.urls} is not an array of page IDs.`
+          message: `${JSON.stringify(req.urls)} is not an array of page IDs.`
         };
       } else {
         for (const url of req.pageIds) {
