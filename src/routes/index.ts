@@ -32,5 +32,6 @@ export * from './addScansByPage'
 export * from './updatePropertyOnPages'
 export * from './addScans'
 export * from './addScansByProperty'
+export * from './deletePages'
 
 
