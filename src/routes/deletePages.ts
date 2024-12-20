@@ -2,7 +2,7 @@ import { jwtClaims } from '#src/app';
 import { db, validateUuid } from '#src/utils';
 
 export const deletePages = async ({ request, reply }) => {
-    const req = JSON.parse(request.query);
+    const req = request.query;
 
     if (!Array.isArray(req.pageIds)) {
         return {
