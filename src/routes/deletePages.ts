@@ -1,5 +1,5 @@
 import { jwtClaims } from '#src/app';
-import { db, validateUrl, validateUuid } from '#src/utils';
+import { db, validateUuid } from '#src/utils';
 
 export const deletePages = async ({ request, reply }) => {
     const req = request.body;
@@ -11,7 +11,7 @@ export const deletePages = async ({ request, reply }) => {
         };
       } else {
         for (const url of req.pageIds) {
-          if (!validateUrl(url)) {
+          if (!validateUuid(url)) {
             return {
               status: "error",
               message: `${url} is not a valid url.`,
