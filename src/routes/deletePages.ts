@@ -2,12 +2,12 @@ import { jwtClaims } from '#src/app';
 import { db, validateUuid } from '#src/utils';
 
 export const deletePages = async ({ request, reply }) => {
-    const req = request.query;
+    const req = JSON.parse(request.query);
 
     if (!Array.isArray(req.pageIds)) {
         return {
           status: "error",
-          message: `${req.urls.stringify()} is not an array of page IDs.`
+          message: `${req.urls} is not an array of page IDs.`
         };
       } else {
         for (const url of req.pageIds) {
