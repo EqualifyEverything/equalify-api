@@ -1,6 +1,13 @@
 import { jwtClaims } from "#src/app";
 import { db, graphql, isStaging, validateUrl, validateUuid } from "#src/utils";
 
+/*
+Send property to scan
+
+input:
+    propertyId: UUID 
+*/
+
 export const addScansByProperty = async ({ request, reply }) => {
   if (!request.body.propertyId) {
     return {

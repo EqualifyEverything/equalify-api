@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import { updatePropertyOnPages, addPages, getScan, addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, deleteUser, getApikey, getCharts, getFilters, getPage, getProperties, getReports, getResultsAll, getResultsMessages, getResultsSchema, getResultsTags, getResultsUrls, getScans, getUpdates, help, trackUser, updateProperties, updateReports, getPages, addScansByPage, getPagesByProperty, addScansByProperty } from '#src/routes';
+import { updatePropertyOnPages, addPages, getScan, addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, deleteUser, getApikey, getCharts, getFilters, getPage, getProperties, getReports, getResultsAll, getResultsMessages, getResultsSchema, getResultsTags, getResultsUrls, getScans, getUpdates, help, trackUser, updateProperties, updateReports, getPages, addScansByPage, getPagesByProperty, addScansByProperty, deletePages } from '#src/routes';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { db } from './utils';
 import { suggestIssue } from './routes/suggestIssue';
@@ -70,6 +70,7 @@ fastify.put('/update/pages/property', {}, async(request, reply) => updatePropert
 fastify.delete('/delete/properties', {}, async (request, reply) => deleteProperties({ request, reply }));
 fastify.delete('/delete/reports', {}, async (request, reply) => deleteReports({ request, reply }));
 fastify.delete('/delete/user', {}, async (request, reply) => deleteUser({ request, reply }));
+fastify.delete('/delete/pages', {}, async (request, reply) => deletePages({ request, reply }));
 
 // MISC requests
 fastify.post('/help', {}, async (request, reply) => help({ request, reply }));
