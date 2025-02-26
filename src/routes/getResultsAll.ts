@@ -31,7 +31,7 @@ export const getResultsAll = async ({ request, reply }) => {
         values: [filters.urls, filters.properties],
     })).rows;
 
-    const response = await graphql({
+    const query = {
         request,
         query: `query (
             $urlIds: [uuid!],
@@ -92,7 +92,9 @@ export const getResultsAll = async ({ request, reply }) => {
             ...filters.tags.length > 0 && ({ tagIds: filters.tags }),
             ...filters.status.length > 0 && ({ equalified: filters.status[0] === 'active' ? false : true }),
         },
-    });
+    };
+    console.log(JSON.stringify({ query }));
+    const response = await graphql(query);
     const filteredNodes = response.nodes ?? [];
 
     const formattedMessages = {};

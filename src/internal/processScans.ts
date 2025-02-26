@@ -82,6 +82,7 @@ export const processScans = async (event) => {
             values: [userId, equalifiedNode.id, `${new Date().toISOString().split('T')[0]}%`],
         })).rows[0]?.id;
         if (existingNodeUpdateId) {
+            // EQUALIFIED TRUE
             await db.query({
                 text: `UPDATE "enode_updates" SET "equalified"=$1 WHERE "id"=$2`,
                 values: [true, existingNodeUpdateId],
@@ -93,6 +94,7 @@ export const processScans = async (event) => {
                 values: [userId, equalifiedNode.id, true],
             });
         }
+        // EQUALIFIED TRUE
         await db.query({
             text: `UPDATE "enodes" SET "equalified" = $1 WHERE "id" = $2`,
             values: [true, equalifiedNode.id],
