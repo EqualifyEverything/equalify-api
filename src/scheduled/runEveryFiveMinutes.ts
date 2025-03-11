@@ -2,7 +2,7 @@ import { db, isStaging } from '#src/utils';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 const lambda = new LambdaClient();
 
-export const runEveryFifteenMinutes = async () => {
+export const runEveryFiveMinutes = async () => {
     await db.connect();
     const pendingScans = (await db.query({
         text: `SELECT DISTINCT s.user_id, s.property_id, CONCAT(u.first_name,' ',u.last_name) AS user_name, u.email AS user_email, p.name AS property_name, COUNT(s.id) AS "pending_scans" FROM scans AS s 
