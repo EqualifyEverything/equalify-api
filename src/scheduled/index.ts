@@ -1,2 +1,2 @@
 export * from './runEveryMinute'
-export * from './runEveryFiveMinutes'
+export * from './runEveryFifteenMinutes'

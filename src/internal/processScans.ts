@@ -43,17 +43,17 @@ export const processScans = async (event) => {
         if (remainingScans.length > 0) {
             const currentTime = new Date().getTime();
             const deltaTime = currentTime - startTime;
-            const twoMinutes = 2 * 60 * 1000;
-            if (deltaTime <= twoMinutes) {
+            const tenMinutes = 10 * 60 * 1000;
+            if (deltaTime <= tenMinutes) {
                 await pollScans(remainingScans);
             }
-            else if (deltaTime > twoMinutes) {
+            else if (deltaTime > tenMinutes) {
                 const scansExist = (await db.query({
                     text: `SELECT "id" FROM "scans" WHERE "job_id" = ANY($1) LIMIT 1`,
                     values: [jobIds],
                 })).rows?.[0]?.id;
                 if (scansExist) {
-                    const message = `2 minutes reached, terminating processScans early`;
+                    const message = `10 minutes reached, terminating processScans early`;
                     console.log(JSON.stringify({ message, ...stats }));
                     throw new Error(message);
                 }
