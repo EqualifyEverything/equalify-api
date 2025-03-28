@@ -6,10 +6,15 @@ export const processScans = async (event) => {
     await db.connect();
     const { userId, propertyId, discovery } = event;
     const jobIds = (await db.query({
-        text: `SELECT s.job_id FROM scans as s INNER JOIN properties AS p ON s.property_id = p.id WHERE s.user_id=$1 AND s.property_id=$2 AND s.processing = TRUE AND p.discovery=$3`,
+        text: `
+            SELECT s.job_id FROM scans as s 
+            INNER JOIN properties AS p ON s.property_id = p.id 
+            WHERE s.user_id=$1 AND s.property_id=$2 AND s.processing = TRUE AND p.discovery=$3
+        `,
         values: [userId, propertyId, discovery],
     })).rows.map(obj => obj.job_id);
     const allNodeIds = [];
+    const failedNodeIds = [];
     const pollScans = (givenJobIds) => new Promise(async (finalRes) => {
         await sleep(1000);
         const remainingScans = [];
@@ -24,7 +29,23 @@ export const processScans = async (event) => {
                         remainingScans.push(jobId);
                     }
                     else if (['failed', 'unknown'].includes(status)) {
-                        await db.query(`DELETE FROM "scans" WHERE "job_id"=$1`, [jobId]);
+                        // It's failed/unknown, let's stop processing this scan
+                        await db.query({
+                            text: `UPDATE "scans" SET "processing"=FALSE, "error"=$1 WHERE "job_id"=$2`,
+                            values: [true, jobId],
+                        });
+                        // Get the URL ID associated with this failed scan, and skip equalifying it!
+                        const failedUrlId = (await db.query({
+                            text: `SELECT "url_id" FROM "scans" WHERE "job_id"=$1`,
+                            values: [jobId],
+                        })).rows?.[0]?.url_id
+                        if (failedUrlId) {
+                            const failedNodeIdsToAdd = (await db.query({
+                                text: `SELECT "id" FROM "enodes" WHERE "url_id"=$1`,
+                                values: [failedUrlId],
+                            })).rows.map(row => row.id);
+                            failedNodeIds.push(...failedNodeIdsToAdd);
+                        }
                     }
                     else if (['completed'].includes(status)) {
                         const nodeIds = await scanProcessor({ result, jobId, userId, propertyId });
@@ -49,7 +70,7 @@ export const processScans = async (event) => {
             }
             else if (deltaTime > tenMinutes) {
                 const scansExist = (await db.query({
-                    text: `SELECT "id" FROM "scans" WHERE "job_id" = ANY($1) LIMIT 1`,
+                    text: `SELECT "id" FROM "scans" WHERE "job_id"=ANY($1) LIMIT 1`,
                     values: [jobIds],
                 })).rows?.[0]?.id;
                 if (scansExist) {
@@ -66,38 +87,65 @@ export const processScans = async (event) => {
     await pollScans(jobIds);
 
     // At the end of all scans, reconcile equalified nodes
-    // Set node equalified to true for previous nodes associated w/ this scan!
-    const allPropertyUrls = (await db.query({
+    // Set node equalified to true for previous nodes associated w/ this scan (EXCEPT failed ones)
+    const allPropertyUrlIds = (await db.query({
         text: `SELECT "id" FROM "urls" WHERE "user_id"=$1 AND "property_id"=$2`,
         values: [userId, propertyId],
-    })).rows;
-    const equalifiedNodes = (await db.query({
-        text: `SELECT "id" FROM "enodes" WHERE "equalified"=$1 AND "user_id"=$2 AND "url_id" = ANY($3)`,
-        values: [false, userId, allPropertyUrls.map(obj => obj.id)],
-    })).rows.filter(obj => !allNodeIds.map(obj => obj.id).includes(obj.id));
+    })).rows.map(obj => obj.id);
+    const equalifiedNodeIds = (await db.query({
+        text: `SELECT "id" FROM "enodes" WHERE "equalified"=$1 AND "user_id"=$2 AND "url_id"=ANY($3)`,
+        values: [false, userId, allPropertyUrlIds],
+    })).rows.filter(obj => ![...allNodeIds, ...failedNodeIds].map(obj => obj.id).includes(obj.id)).map(obj => obj.id);
 
-    for (const equalifiedNode of equalifiedNodes) {
+    for (const equalifiedNodeId of equalifiedNodeIds) {
         const existingNodeUpdateId = (await db.query({
             text: `SELECT "id" FROM "enode_updates" WHERE "user_id"=$1 AND "enode_id"=$2 AND "created_at"::text LIKE $3`,
-            values: [userId, equalifiedNode.id, `${new Date().toISOString().split('T')[0]}%`],
+            values: [userId, equalifiedNodeId, `${new Date().toISOString().split('T')[0]}%`],
         })).rows[0]?.id;
         if (existingNodeUpdateId) {
-            // EQUALIFIED TRUE
+            // We found an existing node update for today, let's simply update it
             await db.query({
                 text: `UPDATE "enode_updates" SET "equalified"=$1 WHERE "id"=$2`,
                 values: [true, existingNodeUpdateId],
             });
         }
         else {
+            // No node update found, insert a new one!
             await db.query({
                 text: `INSERT INTO "enode_updates" ("user_id", "enode_id", "equalified") VALUES ($1, $2, $3)`,
-                values: [userId, equalifiedNode.id, true],
+                values: [userId, equalifiedNodeId, true],
             });
         }
-        // EQUALIFIED TRUE
+        // Now that we've inserted an "equalified" node update, let's set the parent node to "equalified" too!
         await db.query({
-            text: `UPDATE "enodes" SET "equalified" = $1 WHERE "id" = $2`,
-            values: [true, equalifiedNode.id],
+            text: `UPDATE "enodes" SET "equalified"=$1 WHERE "id"=$2`,
+            values: [true, equalifiedNodeId],
+        });
+    }
+
+    // For our failed nodes, we need to "copy" the last node update that exists (if there even is one!)
+    for (const failedNodeId of failedNodeIds) {
+        const existingNodeUpdateId = (await db.query({
+            text: `SELECT "id" FROM "enode_updates" WHERE "user_id"=$1 AND "enode_id"=$2 AND "created_at"::text LIKE $3`,
+            values: [userId, failedNodeId, `${new Date().toISOString().split('T')[0]}%`],
+        })).rows[0]?.id;
+        if (existingNodeUpdateId) {
+            await db.query({
+                text: `UPDATE "enode_updates" SET "equalified"=$1 WHERE "id"=$2`,
+                values: [false, existingNodeUpdateId],
+            });
+        }
+        else {
+            // No node update found, insert a new one!
+            await db.query({
+                text: `INSERT INTO "enode_updates" ("user_id", "enode_id", "equalified") VALUES ($1, $2, $3)`,
+                values: [userId, failedNodeId, false],
+            });
+        }
+        // Now that we've inserted an "unequalified" node update, let's set the parent node to "unequalified" too!
+        await db.query({
+            text: `UPDATE "enodes" SET "equalified"=$1 WHERE "id"=$2`,
+            values: [false, failedNodeId],
         });
     }
 
@@ -220,5 +268,5 @@ const scanProcessor = async ({ result, jobId, userId, propertyId }) => {
         values: [result, jobId],
     });
 
-    return result.nodes;
+    return result.nodes.map(obj => obj.id);
 }
