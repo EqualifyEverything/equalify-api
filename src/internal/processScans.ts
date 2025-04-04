@@ -1,4 +1,5 @@
 import { chunk, db, isStaging, sleep, hashStringToUuid } from '#src/utils';
+import * as cheerio from 'cheerio';
 
 export const processScans = async (event) => {
     console.log(`START PROCESS SCANS`);
@@ -95,13 +96,16 @@ export const processScans = async (event) => {
     const equalifiedNodeIds = (await db.query({
         text: `SELECT "id" FROM "enodes" WHERE "equalified"=$1 AND "user_id"=$2 AND "url_id"=ANY($3)`,
         values: [false, userId, allPropertyUrlIds],
-    })).rows.filter(obj => ![...allNodeIds, ...failedNodeIds].map(obj => obj.id).includes(obj.id)).map(obj => obj.id);
+    })).rows.map(obj => obj.id).filter(obj => ![...allNodeIds, ...failedNodeIds].map(obj => obj).includes(obj));
+
+    console.log(JSON.stringify({ allPropertyUrlIds, equalifiedNodeIds, allNodeIds, failedNodeIds }));
 
     for (const equalifiedNodeId of equalifiedNodeIds) {
         const existingNodeUpdateId = (await db.query({
             text: `SELECT "id" FROM "enode_updates" WHERE "user_id"=$1 AND "enode_id"=$2 AND "created_at"::text LIKE $3`,
             values: [userId, equalifiedNodeId, `${new Date().toISOString().split('T')[0]}%`],
         })).rows[0]?.id;
+        console.log(JSON.stringify({ equalifiedNodeId }));
         if (existingNodeUpdateId) {
             // We found an existing node update for today, let's simply update it
             await db.query({
@@ -115,12 +119,14 @@ export const processScans = async (event) => {
                 text: `INSERT INTO "enode_updates" ("user_id", "enode_id", "equalified") VALUES ($1, $2, $3)`,
                 values: [userId, equalifiedNodeId, true],
             });
+            console.log(JSON.stringify({ message: 'Inserted equalified node update' }));
         }
         // Now that we've inserted an "equalified" node update, let's set the parent node to "equalified" too!
         await db.query({
             text: `UPDATE "enodes" SET "equalified"=$1 WHERE "id"=$2`,
             values: [true, equalifiedNodeId],
         });
+        console.log(JSON.stringify({ message: 'Update equalified node' }));
     }
 
     // For our failed nodes, we need to "copy" the last node update that exists (if there even is one!)
@@ -129,6 +135,7 @@ export const processScans = async (event) => {
             text: `SELECT "id" FROM "enode_updates" WHERE "user_id"=$1 AND "enode_id"=$2 AND "created_at"::text LIKE $3`,
             values: [userId, failedNodeId, `${new Date().toISOString().split('T')[0]}%`],
         })).rows[0]?.id;
+        console.log(JSON.stringify({ existingNodeUpdateId }))
         if (existingNodeUpdateId) {
             await db.query({
                 text: `UPDATE "enode_updates" SET "equalified"=$1 WHERE "id"=$2`,
@@ -141,12 +148,14 @@ export const processScans = async (event) => {
                 text: `INSERT INTO "enode_updates" ("user_id", "enode_id", "equalified") VALUES ($1, $2, $3)`,
                 values: [userId, failedNodeId, false],
             });
+            console.log(JSON.stringify({ message: 'no node update found!' }))
         }
         // Now that we've inserted an "unequalified" node update, let's set the parent node to "unequalified" too!
         await db.query({
             text: `UPDATE "enodes" SET "equalified"=$1 WHERE "id"=$2`,
             values: [false, failedNodeId],
         });
+        console.log(JSON.stringify({ message: 'updating parent node!' }))
     }
 
     await db.clean();
@@ -170,16 +179,20 @@ const scanProcessor = async ({ result, jobId, userId, propertyId }) => {
                 })).rows?.[0]?.id;
         }
         for (const row of result.nodes) {
+            const normalizedHtml = normalizeHtmlWithVdom(row.html);
+            const htmlHashId = hashStringToUuid(normalizedHtml);
             const existingId = (await db.query({
-                text: `SELECT "id" FROM "enodes" WHERE "user_id"=$1 AND "html"=$2 AND "targets"=$3 AND "url_id"=$4`,
-                values: [userId, row.html, JSON.stringify(row.targets), result.urls.find(obj => obj.urlId === row.relatedUrlId)?.id],
+                text: `SELECT "id" FROM "enodes" WHERE "user_id"=$1 AND "html_hash_id"=$2 AND "url_id"=$3`,
+                values: [userId, htmlHashId, result.urls.find(obj => obj.urlId === row.relatedUrlId)?.id],
             })).rows?.[0]?.id;
 
             row.id = existingId ??
                 (await db.query({
-                    text: `INSERT INTO "enodes" ("user_id", "html", "targets", "url_id", "equalified") VALUES ($1, $2, $3, $4, $5) RETURNING "id"`,
-                    values: [userId, row.html, JSON.stringify(row.targets), result.urls.find(obj => obj.urlId === row.relatedUrlId)?.id, false],
+                    text: `INSERT INTO "enodes" ("user_id", "targets", "html", "html_normalized", "html_hash_id", "url_id", "equalified") VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING "id"`,
+                    values: [userId, JSON.stringify(row.targets), row.html, normalizedHtml, htmlHashId, result.urls.find(obj => obj.urlId === row.relatedUrlId)?.id, false],
                 })).rows?.[0]?.id;
+
+            // We used to compare by targets as well, by something in the scan ocassionally returns different targets!!
 
             const existingNodeUpdateId = (await db.query({
                 text: `SELECT "id" FROM "enode_updates" WHERE "user_id"=$1 AND "enode_id"=$2 AND "created_at"::text LIKE $3`,
@@ -269,4 +282,75 @@ const scanProcessor = async ({ result, jobId, userId, propertyId }) => {
     });
 
     return result.nodes.map(obj => obj.id);
+}
+
+const normalizeHtmlWithRegex = (html) => {
+    if (!html) return html;
+
+    // Remove query parameters from src and href attributes
+    html = html.replace(/(src|href)=(["'])([^?"']*)\?[^"']*?\2/g, '$1=$2$3$2');
+
+    // Normalize data-version paths with version hashes
+    html = html.replace(/data-version=(["'])(\/s\/player\/)[a-zA-Z0-9]{8,}(\/.*?\2)/g, 'data-version=$1$2NORMALIZED$3');
+
+    // Normalize tabindex attributes
+    html = html.replace(/tabindex=["']-?\d+["']/g, 'tabindex="NORMALIZED"');
+
+    return html;
+};
+
+const normalizeHtmlWithVdom = (html) => {
+    if (!html) return '';
+
+    const $ = cheerio.load(`<div id="wrapper">${html}</div>`);
+    const root = $('#wrapper');
+
+    // Process all elements
+    root.find('*').each(function () {
+        const el = $(this);
+
+        // Normalize IDs with numbers
+        if (el.attr('id') && /\d{4,}/.test(el.attr('id'))) {
+            el.attr('id', 'NORMALIZED');
+        }
+
+        // Always normalize tabindex
+        if (el.attr('tabindex')) {
+            el.attr('tabindex', 'NORMALIZED');
+        }
+
+        // Remove query params from URLs
+        ['src', 'href'].forEach(attr => {
+            if (el.attr(attr) && el.attr(attr).includes('?')) {
+                el.attr(attr, el.attr(attr).split('?')[0]);
+            }
+        });
+
+        // Handle h5p quiz elements
+        if (el.hasClass('h5p-sc-alternative')) {
+            if (el.hasClass('h5p-sc-is-correct') || el.hasClass('h5p-sc-is-wrong')) {
+                el.removeClass('h5p-sc-is-correct h5p-sc-is-wrong')
+                    .addClass('h5p-sc-is-NORMALIZED');
+            }
+        }
+
+        // Normalize data-version attributes
+        if (el.attr('data-version') && el.attr('data-version').includes('/s/player/')) {
+            el.attr('data-version', el.attr('data-version')
+                .replace(/\/s\/player\/[a-zA-Z0-9]{8,}\//, '/s/player/NORMALIZED/'));
+        }
+
+        // Add more element-specific normalizations based on your data patterns
+    });
+
+    // Remove all whitespace between tags for more reliable comparison
+    let result = root.html();
+
+    // Remove excess whitespace for more consistent matching
+    result = result.replace(/>\s+</g, '><');
+
+    // Remove all text node whitespace variations
+    result = result.replace(/\s{2,}/g, ' ');
+
+    return result;
 }

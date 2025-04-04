@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import { addProperties, addReports, addResults, addScans, deleteProperties, deleteReports, deleteUser, getApikey, getCharts, getFilters, getProperties, getReports, getResultsAll, getResultsMessages, getResultsSchema, getResultsTags, getResultsUrls, getScans, getUpdates, help, trackUser, updateProperties, updateReports } from '#src/routes';
+import { addProperties, addReports, addResults, addScans, adminClearCache, adminProcessScans, deleteProperties, deleteReports, deleteUser, getApikey, getCharts, getFilters, getProperties, getReports, getResultsAll, getResultsCsv, getResultsMessages, getResultsSchema, getResultsTags, getResultsUrls, getScans, getUpdates, help, trackUser, updateProperties, updateReports } from '#src/routes';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { db } from './utils';
 import { getScan } from './routes/getScan';
@@ -13,9 +13,10 @@ export const jwtClaims = { sub: null };
 
 fastify.addHook('preHandler', async (request, reply) => {
     try {
-        if (request.headers.apikey) {
+        const apikey = request.headers.apikey ?? request.query.apikey;
+        if (apikey) {
             await db.connect();
-            const userId = (await db.query(`SELECT "id" FROM "users" WHERE "apikey"=$1`, [request.headers.apikey])).rows[0].id;
+            const userId = (await db.query(`SELECT "id" FROM "users" WHERE "apikey"=$1`, [apikey])).rows[0].id;
             await db.clean();
             request.headers['x-hasura-user-id'] = userId;
             request.headers['x-hasura-role'] = 'user';
@@ -35,6 +36,7 @@ fastify.addHook('preHandler', async (request, reply) => {
 fastify.get('/get/results', {}, async (request, reply) => getResultsAll({ request, reply }));
 fastify.get('/get/results/schema', {}, async (request, reply) => getResultsSchema({ request, reply }));
 fastify.get('/get/results/all', {}, async (request, reply) => getResultsAll({ request, reply }));
+fastify.get('/get/results/csv', {}, async (request, reply) => getResultsCsv({ request, reply }));
 fastify.get('/get/results/messages', {}, async (request, reply) => getResultsMessages({ request, reply }));
 fastify.get('/get/results/tags', {}, async (request, reply) => getResultsTags({ request, reply }));
 fastify.get('/get/results/urls', {}, async (request, reply) => getResultsUrls({ request, reply }));
@@ -65,6 +67,8 @@ fastify.delete('/delete/user', {}, async (request, reply) => deleteUser({ reques
 // MISC requests
 fastify.post('/help', {}, async (request, reply) => help({ request, reply }));
 fastify.post('/track/user', {}, async (request, reply) => trackUser({ request, reply }));
+fastify.get('/admin/clear-cache', {}, async (request, reply) => adminClearCache({ request, reply }));
+fastify.get('/admin/process-scans', {}, async (request, reply) => adminProcessScans({ request, reply }));
 
 fastify.listen({ port: 3000 }, (err) => {
     console.log(`Server listening on ${fastify.server.address().port}`)

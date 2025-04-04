@@ -3,7 +3,8 @@ import { db, formatId } from '#src/utils';
 
 export const getApikey = async ({ request, reply }) => {
     await db.connect();
-    const apikey = (await db.query(`SELECT "apikey" FROM "users" WHERE "id" = $1`, [jwtClaims.sub])).rows?.[0]?.apikey;
+    const { id, apikey } = (await db.query(`SELECT "id", "apikey" FROM "users" WHERE "id" = $1`, [jwtClaims.sub])).rows?.[0];
     await db.clean();
-    return { apikey: formatId(apikey) };
+    const adminIds = JSON.parse(process.env.ADMIN_IDS);
+    return { apikey: formatId(apikey), isAdmin: adminIds.includes(id) };
 }
