@@ -1,2 +1,5 @@
 export * from './processScans'
 export * from './migrateMessagesAndTags'
+export * from './normalizeNodesForUser'
+export * from './fixRows'
+export * from './fixMessageNodes'

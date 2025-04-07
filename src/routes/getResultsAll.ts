@@ -174,7 +174,7 @@ export const getResultsAll = async ({ request, reply }) => {
     };
     const compressedBody = gzipSync(JSON.stringify(body));
     const cacheExpiry = new Date();
-    cacheExpiry.setMinutes(cacheExpiry.getMinutes() + 5);
+    cacheExpiry.setMinutes(cacheExpiry.getMinutes() + 1);
     await db.query({
         text: `UPDATE "reports" SET "cache_gzip"=$1, "cache_date"=$2 WHERE "id"=$3`,
         values: [compressedBody, cacheExpiry, request.query.reportId],

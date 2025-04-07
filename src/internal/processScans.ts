@@ -1,8 +1,7 @@
-import { chunk, db, isStaging, sleep, hashStringToUuid } from '#src/utils';
-import * as cheerio from 'cheerio';
+import { chunk, db, isStaging, sleep, hashStringToUuid, normalizeHtmlWithVdom } from '#src/utils';
 
 export const processScans = async (event) => {
-    console.log(`START PROCESS SCANS`);
+    console.log(`Start processScans`);
     const startTime = new Date().getTime();
     await db.connect();
     const { userId, propertyId, discovery } = event;
@@ -16,13 +15,13 @@ export const processScans = async (event) => {
     })).rows.map(obj => obj.job_id);
     const allNodeIds = [];
     const failedNodeIds = [];
-    const pollScans = (givenJobIds) => new Promise(async (finalRes) => {
+    const pollScans = (givenJobIds) => new Promise(async (outerRes) => {
         await sleep(1000);
         const remainingScans = [];
         const batchesOfJobIds = chunk(givenJobIds, 25);
         for (const [index, batchOfJobIds] of batchesOfJobIds.entries()) {
-            console.log(`Start ${index} of ${batchesOfJobIds.length} batches`);
-            await Promise.allSettled(batchOfJobIds.map(jobId => new Promise(async (res) => {
+            console.log(`Start ${index + 1} of ${batchesOfJobIds.length} batches`);
+            await Promise.allSettled(batchOfJobIds.map(jobId => new Promise(async (innerRes) => {
                 try {
                     const scanResults = await fetch(`https://scan${isStaging ? '-dev' : ''}.equalify.app/results/${jobId}`, { signal: AbortSignal.timeout(10000) });
                     const { result, status } = await scanResults.json();
@@ -57,8 +56,9 @@ export const processScans = async (event) => {
                     console.log(err);
                     remainingScans.push(jobId);
                 }
-                res(1);
+                innerRes(1);
             })));
+            console.log(`End ${index + 1} of ${batchesOfJobIds.length} batches`);
         }
         const stats = { userId, remainingScans: remainingScans.length };
         console.log(JSON.stringify(stats));
@@ -68,6 +68,7 @@ export const processScans = async (event) => {
             const tenMinutes = 10 * 60 * 1000;
             if (deltaTime <= tenMinutes) {
                 await pollScans(remainingScans);
+                outerRes(1);
             }
             else if (deltaTime > tenMinutes) {
                 const scansExist = (await db.query({
@@ -81,12 +82,13 @@ export const processScans = async (event) => {
                 }
             }
         }
-        else {
-            finalRes(1);
-        }
+        outerRes(1);
     });
+    console.log(`Start pollScans`);
     await pollScans(jobIds);
+    console.log(`End pollScans`);
 
+    console.log(`Start equalification`);
     // At the end of all scans, reconcile equalified nodes
     // Set node equalified to true for previous nodes associated w/ this scan (EXCEPT failed ones)
     const allPropertyUrlIds = (await db.query({
@@ -105,7 +107,6 @@ export const processScans = async (event) => {
             text: `SELECT "id" FROM "enode_updates" WHERE "user_id"=$1 AND "enode_id"=$2 AND "created_at"::text LIKE $3`,
             values: [userId, equalifiedNodeId, `${new Date().toISOString().split('T')[0]}%`],
         })).rows[0]?.id;
-        console.log(JSON.stringify({ equalifiedNodeId }));
         if (existingNodeUpdateId) {
             // We found an existing node update for today, let's simply update it
             await db.query({
@@ -119,14 +120,12 @@ export const processScans = async (event) => {
                 text: `INSERT INTO "enode_updates" ("user_id", "enode_id", "equalified") VALUES ($1, $2, $3)`,
                 values: [userId, equalifiedNodeId, true],
             });
-            console.log(JSON.stringify({ message: 'Inserted equalified node update' }));
         }
         // Now that we've inserted an "equalified" node update, let's set the parent node to "equalified" too!
         await db.query({
             text: `UPDATE "enodes" SET "equalified"=$1 WHERE "id"=$2`,
             values: [true, equalifiedNodeId],
         });
-        console.log(JSON.stringify({ message: 'Update equalified node' }));
     }
 
     // For our failed nodes, we need to "copy" the last node update that exists (if there even is one!)
@@ -135,7 +134,6 @@ export const processScans = async (event) => {
             text: `SELECT "id" FROM "enode_updates" WHERE "user_id"=$1 AND "enode_id"=$2 AND "created_at"::text LIKE $3`,
             values: [userId, failedNodeId, `${new Date().toISOString().split('T')[0]}%`],
         })).rows[0]?.id;
-        console.log(JSON.stringify({ existingNodeUpdateId }))
         if (existingNodeUpdateId) {
             await db.query({
                 text: `UPDATE "enode_updates" SET "equalified"=$1 WHERE "id"=$2`,
@@ -148,18 +146,18 @@ export const processScans = async (event) => {
                 text: `INSERT INTO "enode_updates" ("user_id", "enode_id", "equalified") VALUES ($1, $2, $3)`,
                 values: [userId, failedNodeId, false],
             });
-            console.log(JSON.stringify({ message: 'no node update found!' }))
         }
         // Now that we've inserted an "unequalified" node update, let's set the parent node to "unequalified" too!
         await db.query({
             text: `UPDATE "enodes" SET "equalified"=$1 WHERE "id"=$2`,
             values: [false, failedNodeId],
         });
-        console.log(JSON.stringify({ message: 'updating parent node!' }))
     }
 
+    console.log(`End equalification`);
+    console.log(`End processScans`);
+
     await db.clean();
-    console.log(`END PROCESS SCANS`);
     return;
 }
 
@@ -282,75 +280,4 @@ const scanProcessor = async ({ result, jobId, userId, propertyId }) => {
     });
 
     return result.nodes.map(obj => obj.id);
-}
-
-const normalizeHtmlWithRegex = (html) => {
-    if (!html) return html;
-
-    // Remove query parameters from src and href attributes
-    html = html.replace(/(src|href)=(["'])([^?"']*)\?[^"']*?\2/g, '$1=$2$3$2');
-
-    // Normalize data-version paths with version hashes
-    html = html.replace(/data-version=(["'])(\/s\/player\/)[a-zA-Z0-9]{8,}(\/.*?\2)/g, 'data-version=$1$2NORMALIZED$3');
-
-    // Normalize tabindex attributes
-    html = html.replace(/tabindex=["']-?\d+["']/g, 'tabindex="NORMALIZED"');
-
-    return html;
-};
-
-const normalizeHtmlWithVdom = (html) => {
-    if (!html) return '';
-
-    const $ = cheerio.load(`<div id="wrapper">${html}</div>`);
-    const root = $('#wrapper');
-
-    // Process all elements
-    root.find('*').each(function () {
-        const el = $(this);
-
-        // Normalize IDs with numbers
-        if (el.attr('id') && /\d{4,}/.test(el.attr('id'))) {
-            el.attr('id', 'NORMALIZED');
-        }
-
-        // Always normalize tabindex
-        if (el.attr('tabindex')) {
-            el.attr('tabindex', 'NORMALIZED');
-        }
-
-        // Remove query params from URLs
-        ['src', 'href'].forEach(attr => {
-            if (el.attr(attr) && el.attr(attr).includes('?')) {
-                el.attr(attr, el.attr(attr).split('?')[0]);
-            }
-        });
-
-        // Handle h5p quiz elements
-        if (el.hasClass('h5p-sc-alternative')) {
-            if (el.hasClass('h5p-sc-is-correct') || el.hasClass('h5p-sc-is-wrong')) {
-                el.removeClass('h5p-sc-is-correct h5p-sc-is-wrong')
-                    .addClass('h5p-sc-is-NORMALIZED');
-            }
-        }
-
-        // Normalize data-version attributes
-        if (el.attr('data-version') && el.attr('data-version').includes('/s/player/')) {
-            el.attr('data-version', el.attr('data-version')
-                .replace(/\/s\/player\/[a-zA-Z0-9]{8,}\//, '/s/player/NORMALIZED/'));
-        }
-
-        // Add more element-specific normalizations based on your data patterns
-    });
-
-    // Remove all whitespace between tags for more reliable comparison
-    let result = root.html();
-
-    // Remove excess whitespace for more consistent matching
-    result = result.replace(/>\s+</g, '><');
-
-    // Remove all text node whitespace variations
-    result = result.replace(/\s{2,}/g, ' ');
-
-    return result;
 }
